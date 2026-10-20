@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Read(./**)",
+      "Edit(./**)",
+      "Write(./**)",
+      "Skill",
+      "WebSearch",
+      "WebFetch",
+      "mcp__Claude_Browser",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(.venv/bin/python3:*)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(.venv/bin/pip list:*)",
+      "Bash(.venv/bin/pip freeze:*)",
+      "Bash(mkdir -p .tmp:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -m pip install:*)",
+      "Bash(brew install:*)",
+      "Bash(rm:*)"
+    ],
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/**)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(sudo:*)"
+    ]
+  },
+  "env": {
+    "PIP_REQUIRE_VIRTUALENV": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "MPLCONFIGDIR": ".tmp/matplotlib",
+    "PIP_CACHE_DIR": ".tmp/pip-cache"
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  }
+}
