@@ -207,6 +207,8 @@ body.sb-open #stage{right:calc(var(--sidebar-w))}
 .slider:hover .sl-knob,.slider.drag .sl-knob{transform:scale(1.3)}
 .slider:focus-visible .sl-knob{box-shadow:0 0 0 3px color-mix(in srgb,var(--c-active) 35%,transparent)}
 .sl-lbl{display:none}
+.sl-block{display:none;position:absolute;left:calc(var(--cap,1)*100%);right:0;top:11px;height:4px;background:repeating-linear-gradient(90deg,var(--warn) 0 2px,transparent 2px 5px);opacity:.8}.slider.capped .sl-block{display:block}
+.tgl.blocked{outline:1px dashed var(--warn);outline-offset:1px}
 .slider.forced{cursor:not-allowed}.slider.forced .sl-knob,.slider.forced .sl-fill{background:var(--warn)}
 .sl-rule{display:none}
 .sw{position:absolute;left:0;right:0;top:2px;display:flex;gap:4px}
@@ -1683,6 +1685,34 @@ function getActiveStates(n){
 function ensureActiveStates(n){ if (!n || n.type !== 'active') return false; const s = getActiveStates(n); const ch = !n.active_states || n.active_states.a !== s.a || n.active_states.b !== s.b; if (ch) n.active_states = s; return ch; }
 function getActiveNodeValue(n){ return clampNodeRuntimeValue(Number.isFinite(n?.value) ? n.value : getNodeBaseline(n), n); }
 function hasRuleOverrideForNode(id){ return Object.prototype.hasOwnProperty.call(activeRuleOverrides, id); }
+// LANE SLOTS — a street's cross-section (project key lane_slots). Each lever counts lanes per direction; a layout is
+// buildable when every lane gets its own slot that fits it. Like the game, the editor stops a lever where the street is full.
+function laneSlotGroups(){ return Array.isArray(projectTop?.lane_slots) ? projectTop.lane_slots.filter(g => g && g.levers && typeof g.levers === 'object' && Array.isArray(g.slots)) : []; }
+function laneSlotValue(id){ const n = nodes.find(x => x.id === id); return n ? getDisplayedActiveNodeValue(n) : 0; }
+function laneLayoutFits(g, val = laneSlotValue){
+  const lanes = [];
+  Object.entries(g.levers).forEach(([mode, id]) => { const k = Math.max(0, Math.round(Number(val(id)) || 0)); for (let i = 0; i < k; i++) lanes.push(mode); });
+  if (lanes.length > g.slots.length) return false;
+  const used = g.slots.map(() => false);
+  const place = i => { if (i === lanes.length) return true; for (let s = 0; s < g.slots.length; s++) if (!used[s] && (g.slots[s].fits || []).includes(lanes[i])){ used[s] = true; if (place(i + 1)) return true; used[s] = false; } return false; };
+  return place(0);
+}
+/** highest value up to `want` that still fits every street the lever belongs to; lowering is always allowed */
+function laneSlotCap(id, want){
+  let cap = want;
+  laneSlotGroups().forEach(g => {
+    if (!Object.values(g.levers).includes(id)) return;
+    const cur = laneSlotValue(id);
+    while (cap > cur && !laneLayoutFits(g, x => x === id ? cap : laneSlotValue(x))) cap--;
+  });
+  return cap;
+}
+function laneSlotGroupOf(id){ return laneSlotGroups().find(g => Object.values(g.levers).includes(id)); }
+function laneFullMsg(id){
+  const g = laneSlotGroupOf(id); if (!g) return '';
+  const mode = Object.keys(g.levers).find(k => g.levers[k] === id) || id;
+  return `${g.label || g.id}: no free slot for another ${mode} lane — free one first`;
+}
 function getRuleOverrideReason(id){ return activeRuleReasons[id] || ''; }
 function getDisplayedActiveNodeValue(n){ return hasRuleOverrideForNode(n?.id) ? activeRuleOverrides[n.id] : getActiveNodeValue(n); }
 function isActiveStateSelected(n, key){ const st = getActiveStates(n); const v = getDisplayedActiveNodeValue(n); const s = Math.abs(v - st.a) <= Math.abs(v - st.b) ? 'a' : 'b'; return s === key; }
@@ -1978,6 +2008,11 @@ function computeValidation(){
   st.dead.forEach(id => add('structure', 'warn', `lever ${id} reaches nothing`, 'the player can move it through its whole range and no computed value changes', {node: id}));
   if (st.cycles) add('structure', 'info', `${st.cycles} loop link${st.cycles === 1 ? '' : 's'} in the model`, [...st.cycEdges].slice(0, 12).join(', ') + (st.cycEdges.size > 12 ? ' …' : ''));
   // game
+  laneSlotGroups().forEach(g => {
+    const missing = Object.values(g.levers).filter(id => !ids.has(id));
+    if (missing.length){ add('game', 'warn', `lane_slots ${g.id}: lever ${missing.join(', ')} missing`, 'counted as 0 lanes'); return; }
+    if (!laneLayoutFits(g)) add('game', 'warn', `${g.label || g.id}: the game cannot build this layout`, Object.entries(g.levers).map(([m, id]) => `${m} ${laneSlotValue(id)}`).join(' · ') + ` in ${g.slots.length} slots per direction — lower a lever`, {node: Object.values(g.levers)[0]});
+  });
   GAME_OUTPUT_IDS.forEach(id => { if (!ids.has(id)) add('game', 'warn', `output ${id} missing`, 'GetOutputs() falls back to a hard-coded default'); });
   GAME_INPUT_IDS.forEach(id => { if (!ids.has(id)) add('game', 'warn', `input ${id} missing`, 'the Blueprint dropdown entry does nothing'); else if (byId.get(id).type !== 'active') add('game', 'warn', `input ${id} is not active`, `typed ${byId.get(id).type}: SetActiveInput writes a value the solve overwrites`, {node: id}); });
   // spawn
@@ -2226,13 +2261,13 @@ function updateControl(host, n){
       ? `<div class="tgl" data-id="${esc(n.id)}" role="switch" tabindex="0" aria-label="${esc(n.id)}"><span class="tgl-knob"></span></div>`
       : mode === 'switches'
       ? `<div class="sw" data-id="${esc(n.id)}"><button type="button" data-state="a"><span class="k">a</span><span class="v"></span></button><button type="button" data-state="b"><span class="k">b</span><span class="v"></span></button></div>`
-      : `<div class="slider" data-id="${esc(n.id)}" role="slider" tabindex="0" aria-label="${esc(n.id)}"><span class="sl-track"></span><span class="sl-fill"></span><span class="sl-knob"></span></div>`;
+      : `<div class="slider" data-id="${esc(n.id)}" role="slider" tabindex="0" aria-label="${esc(n.id)}"><span class="sl-track"></span><span class="sl-block"></span><span class="sl-fill"></span><span class="sl-knob"></span></div>`;
   }
-  const value = getDisplayedActiveNodeValue(n), min = getActiveControlMin(n), max = getActiveControlMax(n);
+  const value = getDisplayedActiveNodeValue(n), min = getActiveControlMin(n), max = getActiveControlMax(n), cap = laneSlotCap(n.id, max);
   if (mode === 'toggle'){
-    const tg = host.querySelector('.tgl'), on = value >= 1;
-    tg.classList.toggle('on', on); tg.classList.toggle('forced', forced);
-    tg.title = forced ? 'pinned by rule: ' + getRuleOverrideReason(n.id) : (on ? 'on' : 'off');
+    const tg = host.querySelector('.tgl'), on = value >= 1, blocked = !on && cap < 1;
+    tg.classList.toggle('on', on); tg.classList.toggle('forced', forced); tg.classList.toggle('blocked', blocked);
+    tg.title = forced ? 'pinned by rule: ' + getRuleOverrideReason(n.id) : blocked ? laneFullMsg(n.id) : (on ? 'on' : 'off');
     tg.setAttribute('aria-checked', on ? 'true' : 'false');
     return;
   }
@@ -2241,11 +2276,12 @@ function updateControl(host, n){
     host.querySelectorAll('.sw button').forEach(b => { const k = b.dataset.state; b.querySelector('.v').textContent = fmtBubble(n, st[k]); b.classList.toggle('on', isActiveStateSelected(n, k)); b.disabled = forced; });
   } else {
     const sl = host.__sl || (host.__sl = host.querySelector('.slider')), p = max > min ? (value - min) / (max - min) : 0;
-    const sig2 = p + '|' + forced + '|' + value + '|' + min + '|' + max + '|' + (forced ? getRuleOverrideReason(n.id) : '');
+    const sig2 = p + '|' + forced + '|' + value + '|' + min + '|' + max + '|' + cap + '|' + (forced ? getRuleOverrideReason(n.id) : '');
     if (sl.__s === sig2) return; sl.__s = sig2;
     sl.style.setProperty('--p', Math.max(0, Math.min(1, p)));
-    sl.classList.toggle('forced', forced);
-    sl.title = forced ? 'pinned by rule: ' + getRuleOverrideReason(n.id) : `${fmtBubble(n, value)} (${min}…${max})`;
+    sl.style.setProperty('--cap', max > min ? Math.max(0, Math.min(1, (Math.max(cap, value) - min) / (max - min))) : 1);
+    sl.classList.toggle('forced', forced); sl.classList.toggle('capped', cap < max);
+    sl.title = forced ? 'pinned by rule: ' + getRuleOverrideReason(n.id) : `${fmtBubble(n, value)} (${min}…${max})` + (cap < max ? ` · street full above ${Math.max(cap, value)}` : '');
     sl.setAttribute('aria-valuemin', min); sl.setAttribute('aria-valuemax', max); sl.setAttribute('aria-valuenow', value);
   }
 }
@@ -2253,7 +2289,9 @@ function capturePointer(el, id){ try { el.setPointerCapture(id); } catch (err) {
 let _liveT = 0;
 function setActiveValue(id, raw){
   const n = nodes.find(x => x.id === id); if (!n || n.type !== 'active' || hasRuleOverrideForNode(id)) return;
-  const v = clampNodeRuntimeValue(parseStateValue(raw, getActiveNodeValue(n)), n); if (v === n.value) return;
+  let v = clampNodeRuntimeValue(parseStateValue(raw, getActiveNodeValue(n)), n);
+  const cap = laneSlotCap(id, v); if (cap < v){ toast(laneFullMsg(id)); v = cap; }
+  if (v === n.value) return;
   n.value = v; requestRender();
   scheduleSave();
 }
@@ -2997,7 +3035,7 @@ function bindInspector(id){
   on('rp-value-kind', 'change', e => { const x = n(); x.value_kind = e.target.value; commit(); });
   on('rp-unit', 'change', e => { const x = n(); x.unit = e.target.value.trim(); commit(); });
   on('rp-passive-precision', 'change', e => { const x = n(); x.passive_precision = e.target.value === 'rounded' ? 'rounded' : 'decimals'; commit(); });
-  on('rp-value', 'change', e => { const x = n(); x.value = sanitizeNodeValueInput(x, e.target.value, x.value); commit(); });
+  on('rp-value', 'change', e => { const x = n(); let v = sanitizeNodeValueInput(x, e.target.value, x.value); if (x.type === 'active'){ const cap = laneSlotCap(x.id, v); if (cap < v){ toast(laneFullMsg(x.id)); v = cap; e.target.value = v; } } x.value = v; commit(); });
   on('rp-baseline', 'change', e => { const x = n(); x.baseline_value = sanitizeNodeBaselineInput(x, e.target.value, x.baseline_value); commit(); });
   ['min', 'max'].forEach(k => on('rp-' + k, 'change', e => { const x = n(); const v = Number(e.target.value); if (!Number.isFinite(v)){ e.target.value = x[k]; return; } x[k] = x.type === 'active' ? normalizeActiveNaturalNumber(v, x[k]) : v; commit(); }));
   const nfSync = () => { const x = n(), en = document.getElementById('nf-enabled'), ex = document.getElementById('nf-expression'); if (!en || !ex) return; const f = x.node_formula && typeof x.node_formula === 'object' ? x.node_formula : (x.node_formula = {}); f.enabled = en.checked; f.expression = ex.value.trim(); ex.closest('.node-formula-card').classList.toggle('disabled', !en.checked); structRev++; commit(); };

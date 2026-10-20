@@ -1,4 +1,4 @@
-// Check the east-west slot rules (SP 2 + SP 3) in a BCC project file.
+// Check the east-west lane slots (SP 2 + SP 3) in a BCC project file.
 // Uses the editor's CES engine (a port of the game's solver), so the numbers are what the game would publish.
 // Read-only: writes nothing.
 // usage: node handover_ew_slots/check_ew_slots.js [project.json]
@@ -15,62 +15,74 @@ const solve = (ov = {}) => { const r = CES.solveRaw(raw, { overrides: ov }); if 
 const by = new Map(p.nodes.map(n => [n.id, n]));
 let failed = 0;
 const ok = (cond, label, detail = '') => { console.log(`${cond ? 'PASS' : 'FAIL'}  ${label}${detail ? ' — ' + detail : ''}`); if (!cond) failed++; };
-const FIT = 'car_lanes_spawn_2_fit', SLOTS = 'free_lane_slots_spawn_2', SW = 'sidewalk_extension_spawn_2';
+const FIT = 'car_lanes_spawn_2_fit';
+const CAR = 'car_lanes_spawn_2', BIKE = 'bike_lanes_spawn_2', BUS = 'bus_lanes_spawn_2', TRAM = 'tram_line_center';
 console.log(`file: ${path.basename(file)}\n`);
 
+// same check as the editor's laneLayoutFits: every lane gets its own slot that fits it
+const fits = (g, val) => {
+  const lanes = [];
+  Object.entries(g.levers).forEach(([mode, id]) => { for (let i = 0; i < Math.max(0, Math.round(val[id] || 0)); i++) lanes.push(mode); });
+  if (lanes.length > g.slots.length) return false;
+  const used = g.slots.map(() => false);
+  const place = i => { if (i === lanes.length) return true; for (let s = 0; s < g.slots.length; s++) if (!used[s] && g.slots[s].fits.includes(lanes[i])) { used[s] = true; if (place(i + 1)) return true; used[s] = false; } return false; };
+  return place(0);
+};
+
 // structure
-ok([FIT, SLOTS, SW].every(id => by.has(id)), 'the three slot-rule nodes exist');
+const g = (p.lane_slots || []).find(x => x.id === 'ew_street');
+ok(!!g, 'project file has lane_slots → ew_street');
+ok(by.has(FIT), `${FIT} exists`);
 if (failed) process.exit(1);
+ok(g.slots.length === 4 && g.slots.map(s => s.lane).join() === '1/8,2/7,3/6,4/5', '4 slots per direction: 1/8, 2/7, 3/6, 4/5');
+ok(g.slots.map(s => s.default).join() === 'parking,car,car,parking', 'default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6');
+ok(Object.values(g.levers).every(id => by.get(id)?.type === 'active'), 'every lane_slots lever is an active node');
 const ctx = new Set([...by.keys(), 'y', 'baseline', 'base', 'aggregate', 'computed']);
-ok([FIT, SLOTS].every(id => CES.validateExpression(by.get(id).node_formula.expression, false, ctx).ok), 'formulas compile in the game parser');
+ok(CES.validateExpression(by.get(FIT).node_formula.expression, false, ctx).ok, 'formula compiles in the game parser');
 const rawReaders = p.nodes.filter(n => n.id !== FIT && /\bcar_lanes_spawn_2\b(?!_)/.test(n.node_formula?.expression || '')).map(n => n.id);
-ok(!rawReaders.length, `only ${FIT} reads the car lever car_lanes_spawn_2`, rawReaders.join(', '));
-const lv = id => by.get(id);
-ok(lv('car_lanes_spawn_2').max === 3 && lv('bike_lanes_spawn_2').max === 1 && lv('bus_lanes_spawn_2').max === 1 && lv(SW).max === 1 && lv('tram_line_center').max === 1,
-  'lever ranges: car 0–3, bike 0–1, bus 0–1, sidewalk 0–1, tram 0–1');
+ok(!rawReaders.length, `only ${FIT} reads the car lever`, rawReaders.join(', '));
+ok(by.get(CAR).max === 3 && by.get(BIKE).max === 1 && by.get(BUS).max === 1 && by.get(TRAM).max === 1, 'lever ranges: car 0–3, bike 0–1, bus 0–1, tram 0–1');
+ok(!by.has('sidewalk_extension_spawn_2'), 'no sidewalk lever (sidewalk and parking have no effect in the sim)');
 
 // behaviour over every E-W lever combination (everything else as saved)
-let ruleErr = 0, capErr = 0, consErr = 0, combos = 0, cut = 0;
-for (let car = 0; car <= 3; car++) for (const bike of [0, 1]) for (const bus of [0, 1]) for (const tram of [0, 1]) for (const sw of [0, 1]) {
-  const v = solve({ car_lanes_spawn_2: car, bike_lanes_spawn_2: bike, bus_lanes_spawn_2: bus, tram_line_center: tram, [SW]: sw });
+let ruleErr = 0, agree = 0, combos = 0, buildable = 0, consErr = 0;
+for (let car = 0; car <= 3; car++) for (const bike of [0, 1]) for (const bus of [0, 1]) for (const tram of [0, 1]) {
+  const lv = { [CAR]: car, [BIKE]: bike, [BUS]: bus, [TRAM]: tram }, v = solve(lv);
   combos++;
-  const expected = Math.max(0, Math.min(car, 3 - bus - tram - bike * sw));
-  if (expected < car) cut++;
-  ruleErr = Math.max(ruleErr, Math.abs(v(FIT) - expected));
-  // in-game slot count: middle 2 + centre 1 per direction can hold cars; outer holds bike or sidewalk
-  const used = v(FIT) + bus + tram + bike * sw;
-  if (used > 3 + 1e-9) capErr++;
+  const room = Math.max(0, Math.min(car, 3 - bus - tram));
+  ruleErr = Math.max(ruleErr, Math.abs(v(FIT) - room));
+  const f = fits(g, lv); if (f) buildable++;
+  if (f === (car <= 3 - bus - tram)) agree++;
   for (const s of ['2', '3']) {
     const people = v(`car_spawn_count_${s}`) * v('occupancy_rates_cars') + v(`bike_spawn_count_${s}`) + v(`bus_spawn_count_${s}`) * v('occupancy_rates_busses') + v(`tram_spawn_count_${s}`) * v('occupancy_rates_trams');
     consErr = Math.max(consErr, Math.abs(people - v(`trip_demand_spawn_${s}_h`)) / Math.max(1, v(`trip_demand_spawn_${s}_h`)));
   }
 }
-ok(ruleErr < 1e-9, `${FIT} = min(car lever, 3 − bus − tram − bike×sidewalk), ${combos} E-W combinations`, ruleErr ? `off by ${ruleErr}` : '');
-ok(capErr === 0, 'car + bus + tram + inner bike lane never exceed the 3 car-capable slots per direction');
+ok(agree === combos, `the slot table and ${FIT} agree on what is buildable, ${combos} combinations`, `${combos - agree} disagree`);
+ok(ruleErr < 1e-9, `${FIT} = min(car, 3 − bus − tram)`, ruleErr ? `off by ${ruleErr}` : '');
 ok(consErr < 0.01, 'people served at 2* and 3* still add up to demand (bus rounding aside)', `worst gap ${(consErr * 100).toFixed(2)} %`);
-const ex = solve({ car_lanes_spawn_2: 3, bike_lanes_spawn_2: 1, bus_lanes_spawn_2: 1, tram_line_center: 1, [SW]: 0 });
-ok(ex(FIT) === 1, 'example: bike lane + bus lane + tram → 1 car lane left');
-const ex2 = solve({ car_lanes_spawn_2: 3, bike_lanes_spawn_2: 1, bus_lanes_spawn_2: 1, tram_line_center: 1, [SW]: 1 });
-ok(ex2(FIT) === 0, 'same with a sidewalk extension (bike lane moves to lane 2/7) → 0 car lanes');
-const a = solve({ car_lanes_spawn_2: 3, bus_lanes_spawn_2: 0, tram_line_center: 0 }), b = solve({ car_lanes_spawn_2: 3, bus_lanes_spawn_2: 1, tram_line_center: 0 });
-ok(b(FIT) === 2 && b('car_spawn_count_2') < a('car_spawn_count_2'), 'adding a bus lane to 3 car lanes takes a car lane away (2 fit, fewer cars at 2*)');
-console.log(`  (${cut} of ${combos} combinations ask for more car lanes than fit)`);
+const ex = { [CAR]: 3, [BIKE]: 1, [BUS]: 1, [TRAM]: 1 };
+ok(!fits(g, ex) && fits(g, { ...ex, [CAR]: 1 }) && solve(ex)(FIT) === 1, 'example: bike + bus + tram leaves room for exactly 1 car lane');
+ok(fits(g, { [CAR]: 3, [BIKE]: 1, [BUS]: 0, [TRAM]: 0 }), 'a bike lane never costs a car lane (car 3 + bike fits)');
+ok(fits(g, { [CAR]: 2, [BIKE]: 0, [BUS]: 0, [TRAM]: 0 }), 'the default street (2 car lanes, parking) fits');
+console.log(`  (${buildable} of ${combos} combinations are buildable)`);
 
 // reference table
-const f = (x, n = 1) => x.toFixed(n).padStart(8);
+const f1 = (x, n = 1) => x.toFixed(n).padStart(8);
 const rows = [
   ['as saved', {}],
-  ['car 3', { car_lanes_spawn_2: 3, bike_lanes_spawn_2: 0, bus_lanes_spawn_2: 0, tram_line_center: 0, [SW]: 0 }],
-  ['car 3 + bus', { car_lanes_spawn_2: 3, bike_lanes_spawn_2: 0, bus_lanes_spawn_2: 1, tram_line_center: 0, [SW]: 0 }],
-  ['car 3 + bike', { car_lanes_spawn_2: 3, bike_lanes_spawn_2: 1, bus_lanes_spawn_2: 0, tram_line_center: 0, [SW]: 0 }],
-  ['car 3 + bike(in)', { car_lanes_spawn_2: 3, bike_lanes_spawn_2: 1, bus_lanes_spawn_2: 0, tram_line_center: 0, [SW]: 1 }],
-  ['car 3 + tram', { car_lanes_spawn_2: 3, bike_lanes_spawn_2: 0, bus_lanes_spawn_2: 0, tram_line_center: 1, [SW]: 0 }],
-  ['car 3+bike+bus+tram', { car_lanes_spawn_2: 3, bike_lanes_spawn_2: 1, bus_lanes_spawn_2: 1, tram_line_center: 1, [SW]: 0 }],
+  ['default: car 2', { [CAR]: 2, [BIKE]: 0, [BUS]: 0, [TRAM]: 0 }],
+  ['car 3', { [CAR]: 3, [BIKE]: 0, [BUS]: 0, [TRAM]: 0 }],
+  ['car 2 + bus', { [CAR]: 2, [BIKE]: 0, [BUS]: 1, [TRAM]: 0 }],
+  ['car 3 + bike', { [CAR]: 3, [BIKE]: 1, [BUS]: 0, [TRAM]: 0 }],
+  ['car 2 + tram', { [CAR]: 2, [BIKE]: 0, [BUS]: 0, [TRAM]: 1 }],
+  ['car 1+bike+bus+tram', { [CAR]: 1, [BIKE]: 1, [BUS]: 1, [TRAM]: 1 }],
+  ['car 0+bike+bus+tram', { [CAR]: 0, [BIKE]: 1, [BUS]: 1, [TRAM]: 1 }],
 ];
-console.log(`\nE-W per direction at 2* (cars/bikes/buses/trams per hour); 'bike(in)' = bike lane on lane 2/7 behind a sidewalk extension`);
-console.log(`${'setting'.padEnd(21)}${'asked'.padStart(6)}${'fit'.padStart(5)}${'cars'.padStart(8)}${'bikes'.padStart(8)}${'buses'.padStart(8)}${'trams'.padStart(8)}${'displ.'.padStart(8)}`);
+console.log(`\nE-W at 2*, per hour (buildable layouts only)`);
+console.log(`${'setting'.padEnd(21)}${'cars'.padStart(8)}${'bikes'.padStart(8)}${'buses'.padStart(8)}${'trams'.padStart(8)}${'displ.'.padStart(8)}`);
 for (const [label, ov] of rows) {
-  const v = solve(ov), asked = ov.car_lanes_spawn_2 ?? lv('car_lanes_spawn_2').value;
-  console.log(`${label.padEnd(21)}${String(asked).padStart(6)}${String(v(FIT)).padStart(5)}${f(v('car_spawn_count_2'))}${f(v('bike_spawn_count_2'))}${f(v('bus_spawn_count_2'), 2)}${f(v('tram_spawn_count_2'), 2)}${f(v('displaced_cars'))}`);
+  const v = solve(ov);
+  console.log(`${label.padEnd(21)}${f1(v('car_spawn_count_2'))}${f1(v('bike_spawn_count_2'))}${f1(v('bus_spawn_count_2'), 2)}${f1(v('tram_spawn_count_2'), 2)}${f1(v('displaced_cars'))}`);
 }
 process.exitCode = failed ? 1 : 0;

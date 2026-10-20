@@ -1641,7 +1641,7 @@
         "car_lanes_spawn_2_fit"
       ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. Car lanes can use middle lanes 2/7, 3/6 and centre lane 4/5 (max 3), but only what bus lane, tram and an inner bike lane leave free (free_lane_slots_spawn_2). The model reads car_lanes_spawn_2_fit, never this lever directly. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of car_lanes_spawn_3, which was removed. Still one lane per direction.",
+      "notes": "2026-10-20 (E-W lane slots): the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. Car lanes fit on 2/7, 3/6 and 4/5 (max 3), minus one for a bus lane and one for the tram. The editor stops this lever where the street is full; the model reads car_lanes_spawn_2_fit. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of car_lanes_spawn_3, which was removed. Still one lane per direction.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -1662,40 +1662,6 @@
       "_y": -1740
     },
     {
-      "id": "free_lane_slots_spawn_2",
-      "label": "free_lane_slots_spawn_2",
-      "type": "passive",
-      "status": "defined",
-      "influences": [
-        "car_lanes_spawn_2_fit"
-      ],
-      "influenced_by": [
-        "bus_lanes_spawn_2",
-        "tram_line_center",
-        "bike_lanes_spawn_2",
-        "sidewalk_extension_spawn_2"
-      ],
-      "notes": "2026-10-20 (E-W slot rules): NEW. Slots per direction on the east-west street that are still free for car lanes. the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. Car lanes can use middle lanes 2/7 and 3/6 and centre lane 4/5, so at most 3. Each of these takes one of them: a bus lane, the tram (centre), and a bike lane that sits on lane 2/7 because lane 1/8 holds a sidewalk extension. A bike lane on lane 1/8 takes no car slot. Example: bike lane + bus lane + tram leaves 1. The sport terrain in the centre also takes a car slot but has no model input yet.",
-      "priority": "",
-      "value_kind": "absolute",
-      "unit": "",
-      "passive_precision": "decimals",
-      "node_formula": {
-        "enabled": true,
-        "expression": "max(0, 3 - bus_lanes_spawn_2 - tram_line_center - bike_lanes_spawn_2*sidewalk_extension_spawn_2)"
-      },
-      "baseline_value": 0,
-      "value": 0,
-      "min": 0,
-      "max": 3,
-      "active_control": null,
-      "active_order": null,
-      "active_states": null,
-      "evidence_status": "",
-      "_x": -250,
-      "_y": -1740
-    },
-    {
       "id": "car_lanes_spawn_2_fit",
       "label": "car_lanes_spawn_2_fit",
       "type": "passive",
@@ -1710,16 +1676,17 @@
       ],
       "influenced_by": [
         "car_lanes_spawn_2",
-        "free_lane_slots_spawn_2"
+        "bus_lanes_spawn_2",
+        "tram_line_center"
       ],
-      "notes": "2026-10-20 (E-W slot rules): NEW. East-west car lanes per direction that the game can actually build: the player's car_lanes_spawn_2, cut to free_lane_slots_spawn_2. the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. When the levers ask for more than fits, car lanes give way, because the model cannot know which lane was placed first. In the game the slots already prevent this, so there it equals car_lanes_spawn_2. Every node that read car_lanes_spawn_2 reads this node instead.",
+      "notes": "2026-10-20 (E-W lane slots): NEW. East-west car lanes per direction that the street can actually hold. the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. Car lanes fit on 2/7, 3/6 and 4/5, so at most 3; a bus lane and the tram each take one of them. A bike lane does not, because it always fits on 1/8. The editor already stops the levers at what fits, and so does the game, so normally this equals car_lanes_spawn_2. It is the guard for files saved with a layout that does not fit: then car lanes give way.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "max(0, min(car_lanes_spawn_2, free_lane_slots_spawn_2))"
+        "expression": "max(0, min(car_lanes_spawn_2, 3 - bus_lanes_spawn_2 - tram_line_center))"
       },
       "baseline_value": 0,
       "value": 0,
@@ -1729,7 +1696,7 @@
       "active_order": null,
       "active_states": null,
       "evidence_status": "",
-      "_x": -30,
+      "_x": -250,
       "_y": -1740
     },
     {
@@ -1818,7 +1785,7 @@
       "influenced_by": [
         "car_lanes_spawn_2_fit"
       ],
-      "notes": "2026-10-20 (E-W slot rules): Reads car_lanes_spawn_2_fit in place of car_lanes_spawn_2. 2026-10-20 (N-S axis decided at SP 3): at SP 3 (where spawn point 4 used to be) players set the whole north-south cross-section, for both spawn 4 (demand at 4*) and spawn 5 (demand at 5*). Demand and spawn points are unchanged. So car_lanes_spawn_4 now counts twice, like car_lanes_spawn_2. At the starting layout this total goes from 6 to 8, but the car share of all lanes, which is what car_attractivity_general reads, stays the same. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. So car_lanes_spawn_2 counts twice (one lane per direction on each side) and car_lanes_spawn_3 was removed. At the starting layout the total is unchanged.",
+      "notes": "2026-10-20 (E-W lane slots): Reads car_lanes_spawn_2_fit in place of car_lanes_spawn_2. 2026-10-20 (N-S axis decided at SP 3): at SP 3 (where spawn point 4 used to be) players set the whole north-south cross-section, for both spawn 4 (demand at 4*) and spawn 5 (demand at 5*). Demand and spawn points are unchanged. So car_lanes_spawn_4 now counts twice, like car_lanes_spawn_2. At the starting layout this total goes from 6 to 8, but the car share of all lanes, which is what car_attractivity_general reads, stays the same. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. So car_lanes_spawn_2 counts twice (one lane per direction on each side) and car_lanes_spawn_3 was removed. At the starting layout the total is unchanged.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -1987,11 +1954,9 @@
       "label": "bike_lanes_spawn_2 (E-W, set at SP 1)",
       "type": "active",
       "status": "defined",
-      "influences": [
-        "free_lane_slots_spawn_2"
-      ],
+      "influences": [],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. Max 1 per direction: on outer lane 1/8 (no car slot used), or on middle lane 2/7 when lane 1/8 holds a sidewalk extension (one car slot used, see sidewalk_extension_spawn_2). One lane as wide as a car lane carries about 4,000 bikes/h per direction at a signal, about twice the busiest E-W arm's full demand. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bike_lanes_spawn_3, which was removed. Still one lane per direction.",
+      "notes": "2026-10-20 (E-W lane slots): the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. A bike lane fits on 1/8 (or on 2/7 behind a sidewalk extension, which is the same in the sim), so it never costs a car lane. Max 1 per direction: one lane as wide as a car lane carries about 4,000 bikes/h at a signal. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bike_lanes_spawn_3, which was removed. Still one lane per direction.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -2013,39 +1978,6 @@
       "evidence_status": "",
       "_x": -470,
       "_y": -990
-    },
-    {
-      "id": "sidewalk_extension_spawn_2",
-      "label": "sidewalk_extension_spawn_2 (E-W, set at SP 1)",
-      "type": "active",
-      "status": "defined",
-      "influences": [
-        "free_lane_slots_spawn_2",
-        "free_lane_slots_spawn_2"
-      ],
-      "influenced_by": [],
-      "notes": "2026-10-20 (E-W slot rules): NEW. 1 when the player builds a sidewalk extension on outer lane 1/8 of the east-west street, 0 otherwise; one choice sets both directions. the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. A sidewalk extension takes the outer slot, so a bike lane can then only go on middle lane 2/7 (option bike_lane_2_mirrored_7), where it takes a slot from cars and buses. Today this lever only feeds free_lane_slots_spawn_2; the sidewalk's own effects (public space, greenery) are not modelled yet.",
-      "priority": "",
-      "value_kind": "absolute",
-      "unit": "",
-      "passive_precision": "decimals",
-      "node_formula": {
-        "enabled": false,
-        "expression": ""
-      },
-      "baseline_value": 0,
-      "value": 0,
-      "min": 0,
-      "max": 1,
-      "active_control": "slider",
-      "active_order": 16,
-      "active_states": {
-        "a": 0,
-        "b": 1
-      },
-      "evidence_status": "",
-      "_x": -470,
-      "_y": -840
     },
     {
       "id": "bike_lanes_spawn_4",
@@ -2255,10 +2187,10 @@
       "type": "active",
       "status": "defined",
       "influences": [
-        "free_lane_slots_spawn_2"
+        "car_lanes_spawn_2_fit"
       ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. A bus lane takes one middle slot and so one car slot. Capped at 1 per direction: the game slots would allow two (lanes 2/7 and 3/6), but a second bus lane adds no capacity (stops, not lanes, limit a bus corridor; one lane carries about 4,000 people/h at 55 per bus), so the game should block the second one. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bus_lanes_spawn_3, which was removed. Still one lane per direction.",
+      "notes": "2026-10-20 (E-W lane slots): the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. A bus lane fits on 2/7 or 3/6 and takes a car slot. Capped at 1 per direction: a bus corridor is limited by its stops, not its lanes (one lane carries about 4,000 people/h at 55 per bus), so a second bus lane adds no capacity. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bus_lanes_spawn_3, which was removed. Still one lane per direction.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -2786,10 +2718,10 @@
         "tram_spawn_count_2",
         "mode_util_spawn_3",
         "tram_spawn_count_3",
-        "free_lane_slots_spawn_2"
+        "car_lanes_spawn_2_fit"
       ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. The tram takes centre lane 4/5, which otherwise can hold a third car lane. 2026-10-20 (trams on the E-W axis only): gates the tram on the east-west axis only (2* and 3*); the north-south mode competition (mode_util_spawn_4) no longer reads it. Tram line down the centre reservation. A dead lever until 2026-09-05: it had no edges and changed no published value. It is now the binary availability gate for the tram mode in mode_util_spawn_2/3 and tram_spawn_count_2/3. The gate stays binary, unlike bike and bus, because no rails really does mean no trams.",
+      "notes": "2026-10-20 (E-W lane slots): the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. The tram fits only on centre lane 4/5 and takes a car slot there. 2026-10-20 (trams on the E-W axis only): gates the tram on the east-west axis only (2* and 3*); the north-south mode competition (mode_util_spawn_4) no longer reads it. Tram line down the centre reservation. A dead lever until 2026-09-05: it had no edges and changed no published value. It is now the binary availability gate for the tram mode in mode_util_spawn_2/3 and tram_spawn_count_2/3. The gate stays binary, unlike bike and bus, because no rails really does mean no trams.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -7295,54 +7227,6 @@
       "issue_status": "resolved",
       "issue_priority": 450
     },
-    "bus_lanes_spawn_2->free_lane_slots_spawn_2": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "none",
-      "issue_priority": 0
-    },
-    "tram_line_center->free_lane_slots_spawn_2": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "none",
-      "issue_priority": 0
-    },
-    "bike_lanes_spawn_2->free_lane_slots_spawn_2": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "none",
-      "issue_priority": 0
-    },
-    "sidewalk_extension_spawn_2->free_lane_slots_spawn_2": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "none",
-      "issue_priority": 0
-    },
     "car_lanes_spawn_2->car_lanes_spawn_2_fit": {
       "value": "",
       "source": "",
@@ -7355,7 +7239,19 @@
       "issue_status": "none",
       "issue_priority": 0
     },
-    "free_lane_slots_spawn_2->car_lanes_spawn_2_fit": {
+    "bus_lanes_spawn_2->car_lanes_spawn_2_fit": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "tram_line_center->car_lanes_spawn_2_fit": {
       "value": "",
       "source": "",
       "notes": "",
@@ -7460,6 +7356,53 @@
           "value": 0
         }
       ]
+    }
+  ],
+  "lane_slots": [
+    {
+      "id": "ew_street",
+      "label": "East-west street (SP 2 + SP 3), per direction, mirrored",
+      "levers": {
+        "car": "car_lanes_spawn_2",
+        "bus": "bus_lanes_spawn_2",
+        "bike": "bike_lanes_spawn_2",
+        "tram": "tram_line_center"
+      },
+      "slots": [
+        {
+          "lane": "1/8",
+          "default": "parking",
+          "fits": [
+            "bike"
+          ]
+        },
+        {
+          "lane": "2/7",
+          "default": "car",
+          "fits": [
+            "car",
+            "bus",
+            "bike"
+          ]
+        },
+        {
+          "lane": "3/6",
+          "default": "car",
+          "fits": [
+            "car",
+            "bus"
+          ]
+        },
+        {
+          "lane": "4/5",
+          "default": "parking",
+          "fits": [
+            "car",
+            "tram"
+          ]
+        }
+      ],
+      "notes": "Each lever value is a number of lanes per direction. A layout is buildable when every lane can be given its own slot that fits it. Parking, sidewalk extension and sport terrain fill a slot but have no effect in the sim, so they are not listed. A bike lane on 2/7 needs a sidewalk extension on 1/8 in the game; in the sim it is the same as a bike lane on 1/8."
     }
   ],
   "spawn": {
