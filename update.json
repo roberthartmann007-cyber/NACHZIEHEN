@@ -8151,7 +8151,8 @@
         "id": "id_318",
         "label": "tramline_4_mirrored_5",
         "unlockedElemId": null,
-        "elemId": "id_317"
+        "elemId": "id_317",
+        "node_id": "tram_line_center"
       },
       "id_319": {
         "id": "id_319",
@@ -8169,19 +8170,22 @@
         "id": "id_331",
         "label": "carsharing_station",
         "unlockedElemId": null,
-        "elemId": "id_326"
+        "elemId": "id_326",
+        "node_id": "carsharing"
       },
       "id_332": {
         "id": "id_332",
         "label": "grass_patch",
         "unlockedElemId": null,
-        "elemId": "id_326"
+        "elemId": "id_326",
+        "node_id": "grass"
       },
       "id_333": {
         "id": "id_333",
         "label": "ev_charger",
         "unlockedElemId": null,
-        "elemId": "id_326"
+        "elemId": "id_326",
+        "node_id": "ev_charger"
       },
       "id_338": {
         "id": "id_338",
@@ -8199,7 +8203,8 @@
         "id": "id_340",
         "label": "speed_limit_30",
         "unlockedElemId": null,
-        "elemId": "id_326"
+        "elemId": "id_326",
+        "node_id": "speed_limit"
       },
       "id_344": {
         "id": "id_344",
@@ -8229,25 +8234,29 @@
         "id": "id_352",
         "label": "car_lane",
         "unlockedElemId": null,
-        "elemId": "id_351"
+        "elemId": "id_351",
+        "node_id": "car_lanes_spawn_4"
       },
       "id_353": {
         "id": "id_353",
         "label": "bike_lane",
         "unlockedElemId": null,
-        "elemId": "id_351"
+        "elemId": "id_351",
+        "node_id": "bike_lanes_spawn_4"
       },
       "id_356": {
         "id": "id_356",
         "label": "car_lane",
         "unlockedElemId": null,
-        "elemId": "id_355"
+        "elemId": "id_355",
+        "node_id": "car_lanes_spawn_4"
       },
       "id_357": {
         "id": "id_357",
         "label": "bike_lane",
         "unlockedElemId": null,
-        "elemId": "id_355"
+        "elemId": "id_355",
+        "node_id": "bike_lanes_spawn_4"
       },
       "id_360": {
         "id": "id_360",
@@ -8259,7 +8268,8 @@
         "id": "id_361",
         "label": "green facade",
         "unlockedElemId": null,
-        "elemId": "id_358"
+        "elemId": "id_358",
+        "node_id": "green_facades"
       },
       "id_363": {
         "id": "id_363",
@@ -8337,7 +8347,8 @@
         "id": "id_377",
         "label": "playground",
         "unlockedElemId": null,
-        "elemId": "id_376"
+        "elemId": "id_376",
+        "node_id": "playground"
       },
       "id_378": {
         "id": "id_378",
@@ -8355,7 +8366,8 @@
         "id": "id_386",
         "label": "bus stop",
         "unlockedElemId": null,
-        "elemId": "id_384"
+        "elemId": "id_384",
+        "node_id": "bus_stops"
       },
       "id_389": {
         "id": "id_389",
@@ -8367,13 +8379,15 @@
         "id": "id_390",
         "label": "bus_stop",
         "unlockedElemId": null,
-        "elemId": "id_387"
+        "elemId": "id_387",
+        "node_id": "bus_stops"
       },
       "id_393": {
         "id": "id_393",
         "label": "cafe",
         "unlockedElemId": "id_401",
-        "elemId": "id_391"
+        "elemId": "id_391",
+        "node_id": "cafe"
       },
       "id_394": {
         "id": "id_394",
@@ -8433,19 +8447,22 @@
         "id": "id_408",
         "label": "large shade tree",
         "unlockedElemId": null,
-        "elemId": "id_403"
+        "elemId": "id_403",
+        "node_id": "plaza_trees"
       },
       "id_409": {
         "id": "id_409",
         "label": "Quiet shade garden",
         "unlockedElemId": null,
-        "elemId": "id_403"
+        "elemId": "id_403",
+        "node_id": "quiet_garden"
       },
       "id_410": {
         "id": "id_410",
         "label": "public toilet",
         "unlockedElemId": null,
-        "elemId": "id_403"
+        "elemId": "id_403",
+        "node_id": "accessible_comfort_station"
       },
       "id_411": {
         "id": "id_411",
@@ -8457,7 +8474,8 @@
         "id": "id_412",
         "label": "community table",
         "unlockedElemId": null,
-        "elemId": "id_403"
+        "elemId": "id_403",
+        "node_id": "community_pavilion"
       },
       "id_415": {
         "id": "id_415",
@@ -8481,19 +8499,22 @@
         "id": "id_418",
         "label": "large shade tree",
         "unlockedElemId": null,
-        "elemId": "id_414"
+        "elemId": "id_414",
+        "node_id": "plaza_trees"
       },
       "id_419": {
         "id": "id_419",
         "label": "Quiet shade garden",
         "unlockedElemId": null,
-        "elemId": "id_414"
+        "elemId": "id_414",
+        "node_id": "quiet_garden"
       },
       "id_420": {
         "id": "id_420",
         "label": "public toilet",
         "unlockedElemId": null,
-        "elemId": "id_414"
+        "elemId": "id_414",
+        "node_id": "accessible_comfort_station"
       },
       "id_421": {
         "id": "id_421",
@@ -8505,7 +8526,8 @@
         "id": "id_422",
         "label": "community table",
         "unlockedElemId": null,
-        "elemId": "id_414"
+        "elemId": "id_414",
+        "node_id": "community_pavilion"
       },
       "id_424": {
         "id": "id_424",
@@ -8529,19 +8551,22 @@
         "id": "id_427",
         "label": "large shade tree",
         "unlockedElemId": null,
-        "elemId": "id_423"
+        "elemId": "id_423",
+        "node_id": "plaza_trees"
       },
       "id_428": {
         "id": "id_428",
         "label": "Quiet shade garden",
         "unlockedElemId": null,
-        "elemId": "id_423"
+        "elemId": "id_423",
+        "node_id": "quiet_garden"
       },
       "id_429": {
         "id": "id_429",
         "label": "public toilet",
         "unlockedElemId": null,
-        "elemId": "id_423"
+        "elemId": "id_423",
+        "node_id": "accessible_comfort_station"
       },
       "id_430": {
         "id": "id_430",
@@ -8553,7 +8578,8 @@
         "id": "id_431",
         "label": "community table",
         "unlockedElemId": null,
-        "elemId": "id_423"
+        "elemId": "id_423",
+        "node_id": "community_pavilion"
       },
       "id_433": {
         "id": "id_433",
@@ -8577,19 +8603,22 @@
         "id": "id_436",
         "label": "large shade tree",
         "unlockedElemId": null,
-        "elemId": "id_432"
+        "elemId": "id_432",
+        "node_id": "plaza_trees"
       },
       "id_437": {
         "id": "id_437",
         "label": "Quiet shade garden",
         "unlockedElemId": null,
-        "elemId": "id_432"
+        "elemId": "id_432",
+        "node_id": "quiet_garden"
       },
       "id_438": {
         "id": "id_438",
         "label": "public toilet",
         "unlockedElemId": null,
-        "elemId": "id_432"
+        "elemId": "id_432",
+        "node_id": "accessible_comfort_station"
       },
       "id_439": {
         "id": "id_439",
@@ -8601,7 +8630,8 @@
         "id": "id_440",
         "label": "community table",
         "unlockedElemId": null,
-        "elemId": "id_432"
+        "elemId": "id_432",
+        "node_id": "community_pavilion"
       },
       "id_442": {
         "id": "id_442",
@@ -8625,19 +8655,22 @@
         "id": "id_445",
         "label": "large shade tree",
         "unlockedElemId": null,
-        "elemId": "id_441"
+        "elemId": "id_441",
+        "node_id": "plaza_trees"
       },
       "id_446": {
         "id": "id_446",
         "label": "Quiet shade garden",
         "unlockedElemId": null,
-        "elemId": "id_441"
+        "elemId": "id_441",
+        "node_id": "quiet_garden"
       },
       "id_447": {
         "id": "id_447",
         "label": "public toilet",
         "unlockedElemId": null,
-        "elemId": "id_441"
+        "elemId": "id_441",
+        "node_id": "accessible_comfort_station"
       },
       "id_448": {
         "id": "id_448",
@@ -8649,7 +8682,8 @@
         "id": "id_449",
         "label": "community table",
         "unlockedElemId": null,
-        "elemId": "id_441"
+        "elemId": "id_441",
+        "node_id": "community_pavilion"
       },
       "id_451": {
         "id": "id_451",
