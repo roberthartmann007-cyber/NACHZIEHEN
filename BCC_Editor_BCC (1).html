@@ -1687,25 +1687,45 @@ function getActiveNodeValue(n){ return clampNodeRuntimeValue(Number.isFinite(n?.
 function hasRuleOverrideForNode(id){ return Object.prototype.hasOwnProperty.call(activeRuleOverrides, id); }
 // LANE SLOTS — a street's cross-section (project key lane_slots). Each lever counts lanes per direction; a layout is
 // buildable when every lane gets its own slot that fits it. Like the game, the editor stops a lever where the street is full.
+// A street with filled: true has no empty slot; its fill_with lane takes back what another lane gives up, and gives up
+// the slot another lane takes (on the N-S street, a bike lane replaces a car lane).
 function laneSlotGroups(){ return Array.isArray(projectTop?.lane_slots) ? projectTop.lane_slots.filter(g => g && g.levers && typeof g.levers === 'object' && Array.isArray(g.slots)) : []; }
 function laneSlotValue(id){ const n = nodes.find(x => x.id === id); return n ? getDisplayedActiveNodeValue(n) : 0; }
-function laneLayoutFits(g, val = laneSlotValue){
+function laneLayoutFits(g, val = laneSlotValue, fill = true){
   const lanes = [];
   Object.entries(g.levers).forEach(([mode, id]) => { const k = Math.max(0, Math.round(Number(val(id)) || 0)); for (let i = 0; i < k; i++) lanes.push(mode); });
-  if (lanes.length > g.slots.length) return false;
+  if (lanes.length > g.slots.length || (fill && g.filled && lanes.length < g.slots.length)) return false;
   const used = g.slots.map(() => false);
   const place = i => { if (i === lanes.length) return true; for (let s = 0; s < g.slots.length; s++) if (!used[s] && (g.slots[s].fits || []).includes(lanes[i])){ used[s] = true; if (place(i + 1)) return true; used[s] = false; } return false; };
   return place(0);
 }
-/** highest value up to `want` that still fits every street the lever belongs to; lowering is always allowed */
-function laneSlotCap(id, want){
-  let cap = want;
+/** what setting lever `id` to `want` does: v = the value it gets (raising stops where the street is full),
+ *  also = {leverId: value} for the fill lane it swaps with, msg = why v differs from want or what was swapped */
+function laneSlotPlan(id, want){
+  let v = want, msg = ''; const also = {};
   laneSlotGroups().forEach(g => {
     if (!Object.values(g.levers).includes(id)) return;
-    const cur = laneSlotValue(id);
-    while (cap > cur && !laneLayoutFits(g, x => x === id ? cap : laneSlotValue(x))) cap--;
+    const cur = laneSlotValue(id), fillId = g.filled ? g.levers[g.fill_with] : null, fillNode = fillId && nodes.find(x => x.id === fillId);
+    if (fillNode && fillId !== id && !hasRuleOverrideForNode(fillId)){
+      const fCur = laneSlotValue(fillId), fOf = x => Math.max(getActiveControlMin(fillNode), Math.min(getActiveControlMax(fillNode), fCur - (x - cur)));
+      while (v > cur && !laneLayoutFits(g, x => x === id ? v : x === fillId ? fOf(v) : laneSlotValue(x), false)) v--;
+      if (fOf(v) !== fCur){ also[fillId] = fOf(v); msg = `${g.label || g.id}: ${g.fill_with} lanes ${fCur} → ${fOf(v)}`; }
+    } else {
+      while (v > cur && !laneLayoutFits(g, x => x === id ? v : laneSlotValue(x), false)) v--;
+      if (fillId === id && v < cur && laneLayoutFits(g) && !laneLayoutFits(g, x => x === id ? v : laneSlotValue(x))){ v = cur; msg = `${g.label || g.id}: every slot needs a lane — switch a ${g.fill_with} lane to another lane type instead`; }
+    }
+    if (v < want && !msg) msg = laneFullMsg(id);
   });
-  return cap;
+  return {v, also, msg};
+}
+/** highest value up to `want` that the street the lever belongs to can take */
+function laneSlotCap(id, want){ return laneSlotPlan(id, want).v; }
+/** set an active lever through the slot rules; returns the value it got */
+function applyLanePlan(n, want){
+  const plan = laneSlotPlan(n.id, want);
+  if (plan.msg) toast(plan.msg);
+  if (plan.v !== n.value) Object.entries(plan.also).forEach(([k, x]) => { const m = nodes.find(y => y.id === k); if (m) m.value = x; });
+  return plan.v;
 }
 function laneSlotGroupOf(id){ return laneSlotGroups().find(g => Object.values(g.levers).includes(id)); }
 function laneFullMsg(id){
@@ -2011,7 +2031,7 @@ function computeValidation(){
   laneSlotGroups().forEach(g => {
     const missing = Object.values(g.levers).filter(id => !ids.has(id));
     if (missing.length){ add('game', 'warn', `lane_slots ${g.id}: lever ${missing.join(', ')} missing`, 'counted as 0 lanes'); return; }
-    if (!laneLayoutFits(g)) add('game', 'warn', `${g.label || g.id}: the game cannot build this layout`, Object.entries(g.levers).map(([m, id]) => `${m} ${laneSlotValue(id)}`).join(' · ') + ` in ${g.slots.length} slots per direction — lower a lever`, {node: Object.values(g.levers)[0]});
+    if (!laneLayoutFits(g)) add('game', 'warn', `${g.label || g.id}: the game cannot build this layout`, Object.entries(g.levers).map(([m, id]) => `${m} ${laneSlotValue(id)}`).join(' · ') + ` in ${g.slots.length} slots per direction — ` + (laneLayoutFits(g, laneSlotValue, false) ? `every slot needs a lane, raise ${g.fill_with || 'a lever'}` : 'lower a lever'), {node: Object.values(g.levers)[0]});
   });
   GAME_OUTPUT_IDS.forEach(id => { if (!ids.has(id)) add('game', 'warn', `output ${id} missing`, 'GetOutputs() falls back to a hard-coded default'); });
   GAME_INPUT_IDS.forEach(id => { if (!ids.has(id)) add('game', 'warn', `input ${id} missing`, 'the Blueprint dropdown entry does nothing'); else if (byId.get(id).type !== 'active') add('game', 'warn', `input ${id} is not active`, `typed ${byId.get(id).type}: SetActiveInput writes a value the solve overwrites`, {node: id}); });
@@ -2290,7 +2310,7 @@ let _liveT = 0;
 function setActiveValue(id, raw){
   const n = nodes.find(x => x.id === id); if (!n || n.type !== 'active' || hasRuleOverrideForNode(id)) return;
   let v = clampNodeRuntimeValue(parseStateValue(raw, getActiveNodeValue(n)), n);
-  const cap = laneSlotCap(id, v); if (cap < v){ toast(laneFullMsg(id)); v = cap; }
+  v = applyLanePlan(n, v);
   if (v === n.value) return;
   n.value = v; requestRender();
   scheduleSave();
@@ -3035,7 +3055,7 @@ function bindInspector(id){
   on('rp-value-kind', 'change', e => { const x = n(); x.value_kind = e.target.value; commit(); });
   on('rp-unit', 'change', e => { const x = n(); x.unit = e.target.value.trim(); commit(); });
   on('rp-passive-precision', 'change', e => { const x = n(); x.passive_precision = e.target.value === 'rounded' ? 'rounded' : 'decimals'; commit(); });
-  on('rp-value', 'change', e => { const x = n(); let v = sanitizeNodeValueInput(x, e.target.value, x.value); if (x.type === 'active'){ const cap = laneSlotCap(x.id, v); if (cap < v){ toast(laneFullMsg(x.id)); v = cap; e.target.value = v; } } x.value = v; commit(); });
+  on('rp-value', 'change', e => { const x = n(); let v = sanitizeNodeValueInput(x, e.target.value, x.value); if (x.type === 'active'){ v = applyLanePlan(x, v); e.target.value = v; } x.value = v; commit(); });
   on('rp-baseline', 'change', e => { const x = n(); x.baseline_value = sanitizeNodeBaselineInput(x, e.target.value, x.baseline_value); commit(); });
   ['min', 'max'].forEach(k => on('rp-' + k, 'change', e => { const x = n(); const v = Number(e.target.value); if (!Number.isFinite(v)){ e.target.value = x[k]; return; } x[k] = x.type === 'active' ? normalizeActiveNaturalNumber(v, x[k]) : v; commit(); }));
   const nfSync = () => { const x = n(), en = document.getElementById('nf-enabled'), ex = document.getElementById('nf-expression'); if (!en || !ex) return; const f = x.node_formula && typeof x.node_formula === 'object' ? x.node_formula : (x.node_formula = {}); f.enabled = en.checked; f.expression = ex.value.trim(); ex.closest('.node-formula-card').classList.toggle('disabled', !en.checked); structRev++; commit(); };
@@ -3464,7 +3484,7 @@ function setView(v){
 function renderListView(){
   const lv = document.getElementById('listview'); if (lv.hidden) return;
   if (lv.contains(document.activeElement) && document.activeElement.tagName === 'INPUT'){ // keep the field being typed in; refresh numbers only
-    lv.querySelectorAll('tr[data-id]').forEach(tr => { const n = nodes.find(x => x.id === tr.dataset.id); if (!n) return; tr.querySelector('.lv-v').textContent = fmtBubble(n, nodeValue(n)); const d = deltaOf(n.id); const dc = tr.querySelector('.lv-d'); dc.textContent = d ? fmtDelta(d) : ''; dc.className = 'r lv-d ' + (d > 0 ? 'rise' : d < 0 ? 'fall' : ''); });
+    lv.querySelectorAll('tr[data-id]').forEach(tr => { const n = nodes.find(x => x.id === tr.dataset.id); if (!n) return; tr.querySelector('.lv-v').textContent = fmtBubble(n, nodeValue(n)); const d = deltaOf(n.id); const dc = tr.querySelector('.lv-d'); dc.textContent = d ? fmtDelta(d) : ''; dc.className = 'r lv-d ' + (d > 0 ? 'rise' : d < 0 ? 'fall' : ''); const inp = tr.querySelector('.lv-in'); if (inp && inp !== document.activeElement) inp.value = formatEditableNodeValue(n, n.value); });
     return;
   }
   const rows = nodes.filter(matchesFilter).map(n => ({n, g: groupOf(n), t: effType(n), v: nodeValue(n), d: deltaOf(n.id), c: compareValues?.get ? compareValues.get(n.id) : undefined, ex: null}));
