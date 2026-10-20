@@ -991,12 +991,12 @@
       "status": "defined",
       "influences": [],
       "influenced_by": [
-        "car_lanes_spawn_2",
         "car_lanes_spawn_4",
         "car_spawn_count_2",
         "car_spawn_count_3",
         "car_spawn_count_4",
-        "car_spawn_count_5"
+        "car_spawn_count_5",
+        "car_lanes_spawn_2_fit"
       ],
       "notes": "2026-10-20 (N-S axis decided at SP 3): at SP 3 (where spawn point 4 used to be) players set the whole north-south cross-section, for both spawn 4 (demand at 4*) and spawn 5 (demand at 5*). Demand and spawn points are unchanged. Spawn 5 capacity term added, using car_lanes_spawn_4*800. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. The spawn 3 capacity term now reads car_lanes_spawn_2*800. Capacity is still counted per spawn point. Car demand exceeding car capacity that relocates to other streets (10.6% evaporates). demand_car = trip_demand*car_share.\n\nCairns, Hass-Klau & Goodwin 1998; Cairns, Atkins & Goodwin 2002, ICE Municipal Engineer 151(1):13-22 (DOI 10.1680/muen.2002.151.1.13) — mean 21.9% / median 10.6% traffic evaporation",
       "priority": "",
@@ -1005,7 +1005,7 @@
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "max(0, car_spawn_count_2 - (car_lanes_spawn_2*800)*0.894)+ max(0, car_spawn_count_3 - (car_lanes_spawn_2*800)*0.894)+ max(0, car_spawn_count_4 - (car_lanes_spawn_4*800)*0.894)+ max(0, car_spawn_count_5 - (car_lanes_spawn_4*800)*0.894)"
+        "expression": "max(0, car_spawn_count_2 - (car_lanes_spawn_2_fit*800)*0.894)+ max(0, car_spawn_count_3 - (car_lanes_spawn_2_fit*800)*0.894)+ max(0, car_spawn_count_4 - (car_lanes_spawn_4*800)*0.894)+ max(0, car_spawn_count_5 - (car_lanes_spawn_4*800)*0.894)"
       },
       "baseline_value": 0,
       "value": 0,
@@ -1103,11 +1103,11 @@
         "mob_attract_bikes",
         "mob_attract_bus",
         "mob_attract_tram",
-        "car_lanes_spawn_2",
         "car_attractivity_general",
         "total_bike_lanes",
         "total_bus_lanes",
-        "tram_line_center"
+        "tram_line_center",
+        "car_lanes_spawn_2_fit"
       ],
       "notes": "THE DIVISOR that the spawn counts at spawn point 2 actually use. Added 2026-09-05. It is the sum of exactly the same availability-weighted mode terms that appear in the numerators of car_spawn_count_2, bike_spawn_count_2, bus_spawn_count_2 and tram_spawn_count_2, so those four shares sum to one and a trip that stops choosing one mode moves to another instead of disappearing. Before this change the numerators were gated on lane counts while the single street-wide divisor mode_util_sum was not, so closing a gate deleted that mode's share of demand: removing the last bike lane made the street measurably quieter. Note the division of labour between local and street-wide availability: the car term is gated on this spawn point's own car_lanes_spawn_2, because a segment with no carriageway cannot pass a car, while the bike, bus and tram terms use the street-wide total_bike_lanes, total_bus_lanes and tram_line_center, because a trip traverses the whole street and a cyclist does not cease to exist over the stretch without paint. The trailing 0.001 is the model's existing divide-by-zero idiom, inherited from mode_util_sum. mode_util_sum itself is now a diagnostic total only - do not divide by it. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
       "priority": "medium",
@@ -1116,7 +1116,7 @@
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "mob_attract_bikes*(0.35 + 0.65*min(1, total_bike_lanes/2)) + mob_attract_bus*(0.7 + 0.3*min(1, total_bus_lanes)) + car_attractivity_general*(min(1, max(0, car_lanes_spawn_2))*(90 - 45/max(1, car_lanes_spawn_2))/90) + mob_attract_tram*min(1, max(0, tram_line_center)) + 0.001"
+        "expression": "mob_attract_bikes*(0.35 + 0.65*min(1, total_bike_lanes/2)) + mob_attract_bus*(0.7 + 0.3*min(1, total_bus_lanes)) + car_attractivity_general*(min(1, max(0, car_lanes_spawn_2_fit))*(90 - 45/max(1, car_lanes_spawn_2_fit))/90) + mob_attract_tram*min(1, max(0, tram_line_center)) + 0.001"
       },
       "baseline_value": 100,
       "value": 100,
@@ -1144,11 +1144,11 @@
         "mob_attract_bikes",
         "mob_attract_bus",
         "mob_attract_tram",
-        "car_lanes_spawn_2",
         "car_attractivity_general",
         "total_bike_lanes",
         "total_bus_lanes",
-        "tram_line_center"
+        "tram_line_center",
+        "car_lanes_spawn_2_fit"
       ],
       "notes": "2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. The car term now reads car_lanes_spawn_2, matching car_spawn_count_3, so the four shares at spawn 3 still sum to one. Where the older note below says spawn 3 is gated on its own car_lanes_spawn_3, read car_lanes_spawn_2. THE DIVISOR that the spawn counts at spawn point 3 actually use. Added 2026-09-05. It is the sum of exactly the same availability-weighted mode terms that appear in the numerators of car_spawn_count_3, bike_spawn_count_3, bus_spawn_count_3 and tram_spawn_count_3, so those four shares sum to one and a trip that stops choosing one mode moves to another instead of disappearing. Before this change the numerators were gated on lane counts while the single street-wide divisor mode_util_sum was not, so closing a gate deleted that mode's share of demand: removing the last bike lane made the street measurably quieter. Note the division of labour between local and street-wide availability: the car term is gated on this spawn point's own car_lanes_spawn_3, because a segment with no carriageway cannot pass a car, while the bike, bus and tram terms use the street-wide total_bike_lanes, total_bus_lanes and tram_line_center, because a trip traverses the whole street and a cyclist does not cease to exist over the stretch without paint. The trailing 0.001 is the model's existing divide-by-zero idiom, inherited from mode_util_sum. mode_util_sum itself is now a diagnostic total only - do not divide by it. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
       "priority": "medium",
@@ -1157,7 +1157,7 @@
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "mob_attract_bikes*(0.35 + 0.65*min(1, total_bike_lanes/2)) + mob_attract_bus*(0.7 + 0.3*min(1, total_bus_lanes)) + car_attractivity_general*(min(1, max(0, car_lanes_spawn_2))*(90 - 45/max(1, car_lanes_spawn_2))/90) + mob_attract_tram*min(1, max(0, tram_line_center)) + 0.001"
+        "expression": "mob_attract_bikes*(0.35 + 0.65*min(1, total_bike_lanes/2)) + mob_attract_bus*(0.7 + 0.3*min(1, total_bus_lanes)) + car_attractivity_general*(min(1, max(0, car_lanes_spawn_2_fit))*(90 - 45/max(1, car_lanes_spawn_2_fit))/90) + mob_attract_tram*min(1, max(0, tram_line_center)) + 0.001"
       },
       "baseline_value": 100,
       "value": 100,
@@ -1638,14 +1638,10 @@
       "type": "active",
       "status": "defined",
       "influences": [
-        "displaced_cars",
-        "car_spawn_count_2",
-        "mode_util_spawn_2",
-        "car_spawn_count_3",
-        "mode_util_spawn_3"
+        "car_lanes_spawn_2_fit"
       ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of car_lanes_spawn_3, which was removed. Still one lane per direction.",
+      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. Car lanes can use middle lanes 2/7, 3/6 and centre lane 4/5 (max 3), but only what bus lane, tram and an inner bike lane leave free (free_lane_slots_spawn_2). The model reads car_lanes_spawn_2_fit, never this lever directly. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of car_lanes_spawn_3, which was removed. Still one lane per direction.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -1663,6 +1659,77 @@
       },
       "evidence_status": "",
       "_x": -470,
+      "_y": -1740
+    },
+    {
+      "id": "free_lane_slots_spawn_2",
+      "label": "free_lane_slots_spawn_2",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "car_lanes_spawn_2_fit"
+      ],
+      "influenced_by": [
+        "bus_lanes_spawn_2",
+        "tram_line_center",
+        "bike_lanes_spawn_2",
+        "sidewalk_extension_spawn_2"
+      ],
+      "notes": "2026-10-20 (E-W slot rules): NEW. Slots per direction on the east-west street that are still free for car lanes. the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. Car lanes can use middle lanes 2/7 and 3/6 and centre lane 4/5, so at most 3. Each of these takes one of them: a bus lane, the tram (centre), and a bike lane that sits on lane 2/7 because lane 1/8 holds a sidewalk extension. A bike lane on lane 1/8 takes no car slot. Example: bike lane + bus lane + tram leaves 1. The sport terrain in the centre also takes a car slot but has no model input yet.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "max(0, 3 - bus_lanes_spawn_2 - tram_line_center - bike_lanes_spawn_2*sidewalk_extension_spawn_2)"
+      },
+      "baseline_value": 0,
+      "value": 0,
+      "min": 0,
+      "max": 3,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": -250,
+      "_y": -1740
+    },
+    {
+      "id": "car_lanes_spawn_2_fit",
+      "label": "car_lanes_spawn_2_fit",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "displaced_cars",
+        "car_spawn_count_2",
+        "car_spawn_count_3",
+        "mode_util_spawn_2",
+        "mode_util_spawn_3",
+        "total_car_lanes"
+      ],
+      "influenced_by": [
+        "car_lanes_spawn_2",
+        "free_lane_slots_spawn_2"
+      ],
+      "notes": "2026-10-20 (E-W slot rules): NEW. East-west car lanes per direction that the game can actually build: the player's car_lanes_spawn_2, cut to free_lane_slots_spawn_2. the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. When the levers ask for more than fits, car lanes give way, because the model cannot know which lane was placed first. In the game the slots already prevent this, so there it equals car_lanes_spawn_2. Every node that read car_lanes_spawn_2 reads this node instead.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "max(0, min(car_lanes_spawn_2, free_lane_slots_spawn_2))"
+      },
+      "baseline_value": 0,
+      "value": 0,
+      "min": 0,
+      "max": 3,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": -30,
       "_y": -1740
     },
     {
@@ -1748,15 +1815,17 @@
       "influences": [
         "car_attractivity_general"
       ],
-      "influenced_by": [],
-      "notes": "2026-10-20 (N-S axis decided at SP 3): at SP 3 (where spawn point 4 used to be) players set the whole north-south cross-section, for both spawn 4 (demand at 4*) and spawn 5 (demand at 5*). Demand and spawn points are unchanged. So car_lanes_spawn_4 now counts twice, like car_lanes_spawn_2. At the starting layout this total goes from 6 to 8, but the car share of all lanes, which is what car_attractivity_general reads, stays the same. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. So car_lanes_spawn_2 counts twice (one lane per direction on each side) and car_lanes_spawn_3 was removed. At the starting layout the total is unchanged.",
+      "influenced_by": [
+        "car_lanes_spawn_2_fit"
+      ],
+      "notes": "2026-10-20 (E-W slot rules): Reads car_lanes_spawn_2_fit in place of car_lanes_spawn_2. 2026-10-20 (N-S axis decided at SP 3): at SP 3 (where spawn point 4 used to be) players set the whole north-south cross-section, for both spawn 4 (demand at 4*) and spawn 5 (demand at 5*). Demand and spawn points are unchanged. So car_lanes_spawn_4 now counts twice, like car_lanes_spawn_2. At the starting layout this total goes from 6 to 8, but the car share of all lanes, which is what car_attractivity_general reads, stays the same. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. So car_lanes_spawn_2 counts twice (one lane per direction on each side) and car_lanes_spawn_3 was removed. At the starting layout the total is unchanged.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "2*car_lanes_spawn_2 + 2*car_lanes_spawn_4"
+        "expression": "2*car_lanes_spawn_2_fit + 2*car_lanes_spawn_4"
       },
       "baseline_value": 0,
       "value": 0,
@@ -1780,10 +1849,10 @@
       ],
       "influenced_by": [
         "mode_util_spawn_2",
-        "car_lanes_spawn_2",
         "car_attractivity_general",
         "trip_demand_spawn_2_h",
-        "occupancy_rates_cars"
+        "occupancy_rates_cars",
+        "car_lanes_spawn_2_fit"
       ],
       "notes": "Cars per hour at spawn point 2. Rewritten 2026-09-05 to divide by mode_util_spawn_2, which contains this same term, so the four modes' shares sum to one. The car gate stays local and binary at zero lanes - a segment with no carriageway passes no cars - and the model's existing lane-count capacity term is kept, rescaled from (90 - 45/lanes)/100 to (90 - 45/lanes)/90 so that it reads as an availability in [0, 1] saturating at 1 rather than at 0.9. Only the ratio between mode terms matters now that the sum normalises, so that rescale is a change of units, not of behaviour. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
       "priority": "",
@@ -1792,7 +1861,7 @@
       "passive_precision": "rounded",
       "node_formula": {
         "enabled": true,
-        "expression": "(trip_demand_spawn_2_h * (car_attractivity_general*(min(1, max(0, car_lanes_spawn_2))*(90 - 45/max(1, car_lanes_spawn_2))/90)) / mode_util_spawn_2) / occupancy_rates_cars"
+        "expression": "(trip_demand_spawn_2_h * (car_attractivity_general*(min(1, max(0, car_lanes_spawn_2_fit))*(90 - 45/max(1, car_lanes_spawn_2_fit))/90)) / mode_util_spawn_2) / occupancy_rates_cars"
       },
       "baseline_value": 0,
       "value": 0,
@@ -1816,10 +1885,10 @@
       ],
       "influenced_by": [
         "mode_util_spawn_3",
-        "car_lanes_spawn_2",
         "car_attractivity_general",
         "trip_demand_spawn_3_h",
-        "occupancy_rates_cars"
+        "occupancy_rates_cars",
+        "car_lanes_spawn_2_fit"
       ],
       "notes": "2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. The car gate here now reads car_lanes_spawn_2, not car_lanes_spawn_3, so spawn 3's cars run on the lanes chosen through the spawn_2 lever. This count is still needed and still takes its own trip_demand_spawn_3_h; only its lane input changed. Cars per hour at spawn point 3. Rewritten 2026-09-05 to divide by mode_util_spawn_3, which contains this same term, so the four modes' shares sum to one. The car gate stays local and binary at zero lanes - a segment with no carriageway passes no cars - and the model's existing lane-count capacity term is kept, rescaled from (90 - 45/lanes)/100 to (90 - 45/lanes)/90 so that it reads as an availability in [0, 1] saturating at 1 rather than at 0.9. Only the ratio between mode terms matters now that the sum normalises, so that rescale is a change of units, not of behaviour. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
       "priority": "",
@@ -1828,7 +1897,7 @@
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "(trip_demand_spawn_3_h * (car_attractivity_general*(min(1, max(0, car_lanes_spawn_2))*(90 - 45/max(1, car_lanes_spawn_2))/90)) / mode_util_spawn_3) / occupancy_rates_cars"
+        "expression": "(trip_demand_spawn_3_h * (car_attractivity_general*(min(1, max(0, car_lanes_spawn_2_fit))*(90 - 45/max(1, car_lanes_spawn_2_fit))/90)) / mode_util_spawn_3) / occupancy_rates_cars"
       },
       "baseline_value": 50,
       "value": 0,
@@ -1918,9 +1987,11 @@
       "label": "bike_lanes_spawn_2 (E-W, set at SP 1)",
       "type": "active",
       "status": "defined",
-      "influences": [],
+      "influences": [
+        "free_lane_slots_spawn_2"
+      ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bike_lanes_spawn_3, which was removed. Still one lane per direction.",
+      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. Max 1 per direction: on outer lane 1/8 (no car slot used), or on middle lane 2/7 when lane 1/8 holds a sidewalk extension (one car slot used, see sidewalk_extension_spawn_2). One lane as wide as a car lane carries about 4,000 bikes/h per direction at a signal, about twice the busiest E-W arm's full demand. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bike_lanes_spawn_3, which was removed. Still one lane per direction.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -1942,6 +2013,39 @@
       "evidence_status": "",
       "_x": -470,
       "_y": -990
+    },
+    {
+      "id": "sidewalk_extension_spawn_2",
+      "label": "sidewalk_extension_spawn_2 (E-W, set at SP 1)",
+      "type": "active",
+      "status": "defined",
+      "influences": [
+        "free_lane_slots_spawn_2",
+        "free_lane_slots_spawn_2"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-20 (E-W slot rules): NEW. 1 when the player builds a sidewalk extension on outer lane 1/8 of the east-west street, 0 otherwise; one choice sets both directions. the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. A sidewalk extension takes the outer slot, so a bike lane can then only go on middle lane 2/7 (option bike_lane_2_mirrored_7), where it takes a slot from cars and buses. Today this lever only feeds free_lane_slots_spawn_2; the sidewalk's own effects (public space, greenery) are not modelled yet.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 0,
+      "value": 0,
+      "min": 0,
+      "max": 1,
+      "active_control": "slider",
+      "active_order": 16,
+      "active_states": {
+        "a": 0,
+        "b": 1
+      },
+      "evidence_status": "",
+      "_x": -470,
+      "_y": -840
     },
     {
       "id": "bike_lanes_spawn_4",
@@ -2150,9 +2254,11 @@
       "label": "bus_lanes_spawn_2 (E-W, set at SP 1)",
       "type": "active",
       "status": "defined",
-      "influences": [],
+      "influences": [
+        "free_lane_slots_spawn_2"
+      ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bus_lanes_spawn_3, which was removed. Still one lane per direction.",
+      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. A bus lane takes one middle slot and so one car slot. Capped at 1 per direction: the game slots would allow two (lanes 2/7 and 3/6), but a second bus lane adds no capacity (stops, not lanes, limit a bus corridor; one lane carries about 4,000 people/h at 55 per bus), so the game should block the second one. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bus_lanes_spawn_3, which was removed. Still one lane per direction.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -2679,10 +2785,11 @@
         "mode_util_spawn_2",
         "tram_spawn_count_2",
         "mode_util_spawn_3",
-        "tram_spawn_count_3"
+        "tram_spawn_count_3",
+        "free_lane_slots_spawn_2"
       ],
       "influenced_by": [],
-      "notes": "2026-10-20 (trams on the E-W axis only): gates the tram on the east-west axis only (2* and 3*); the north-south mode competition (mode_util_spawn_4) no longer reads it. Tram line down the centre reservation. A dead lever until 2026-09-05: it had no edges and changed no published value. It is now the binary availability gate for the tram mode in mode_util_spawn_2/3 and tram_spawn_count_2/3. The gate stays binary, unlike bike and bus, because no rails really does mean no trams.",
+      "notes": "2026-10-20 (E-W slot rules): the game builds the east-west street from 4 slots per direction (outer lane 1/8, middle lanes 2/7 and 3/6, centre lane 4/5), and every lane type competes for them. The tram takes centre lane 4/5, which otherwise can hold a third car lane. 2026-10-20 (trams on the E-W axis only): gates the tram on the east-west axis only (2* and 3*); the north-south mode competition (mode_util_spawn_4) no longer reads it. Tram line down the centre reservation. A dead lever until 2026-09-05: it had no edges and changed no published value. It is now the binary availability gate for the tram mode in mode_util_spawn_2/3 and tram_spawn_count_2/3. The gate stays binary, unlike bike and bus, because no rails really does mean no trams.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -4687,21 +4794,6 @@
       "issue_status": "unresolved",
       "issue_priority": 150
     },
-    "car_lanes_spawn_2->displaced_cars": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "hypothesis",
-      "confidence": "",
-      "weight": 1,
-      "formula": {
-        "type": "multiplier",
-        "label": "Source value multiplies compiled target value"
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 210
-    },
     "car_lanes_spawn_4->displaced_cars": {
       "value": "",
       "source": "",
@@ -5258,30 +5350,6 @@
       "issue_priority": 450
     },
     "effective_trip_demand->trip_demand_spawn_6_h": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "resolved",
-      "issue_priority": 450
-    },
-    "car_lanes_spawn_2->car_spawn_count_2": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "resolved",
-      "issue_priority": 450
-    },
-    "car_lanes_spawn_2->car_spawn_count_3": {
       "value": "",
       "source": "",
       "notes": "",
@@ -6297,18 +6365,6 @@
       "issue_status": "none",
       "issue_priority": 0
     },
-    "car_lanes_spawn_2->mode_util_spawn_2": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "none",
-      "issue_priority": 0
-    },
     "mob_attract_tram->mode_util_spawn_2": {
       "value": "",
       "source": "",
@@ -6526,18 +6582,6 @@
       "issue_priority": 0
     },
     "car_attractivity_general->mode_util_spawn_3": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "none",
-      "issue_priority": 0
-    },
-    "car_lanes_spawn_2->mode_util_spawn_3": {
       "value": "",
       "source": "",
       "notes": "",
@@ -7250,6 +7294,153 @@
       "color": "",
       "issue_status": "resolved",
       "issue_priority": 450
+    },
+    "bus_lanes_spawn_2->free_lane_slots_spawn_2": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "tram_line_center->free_lane_slots_spawn_2": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "bike_lanes_spawn_2->free_lane_slots_spawn_2": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "sidewalk_extension_spawn_2->free_lane_slots_spawn_2": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "car_lanes_spawn_2->car_lanes_spawn_2_fit": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "free_lane_slots_spawn_2->car_lanes_spawn_2_fit": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "car_lanes_spawn_2_fit->displaced_cars": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "hypothesis",
+      "confidence": "",
+      "weight": 1,
+      "formula": {
+        "type": "multiplier",
+        "label": "Source value multiplies compiled target value"
+      },
+      "color": "",
+      "issue_status": "unresolved",
+      "issue_priority": 210
+    },
+    "car_lanes_spawn_2_fit->car_spawn_count_2": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "resolved",
+      "issue_priority": 450
+    },
+    "car_lanes_spawn_2_fit->car_spawn_count_3": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "resolved",
+      "issue_priority": 450
+    },
+    "car_lanes_spawn_2_fit->mode_util_spawn_2": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "car_lanes_spawn_2_fit->mode_util_spawn_3": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "car_lanes_spawn_2_fit->total_car_lanes": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
     }
   },
   "system_rules": [
