@@ -5,6 +5,8 @@
 **Editor:** `BCC_Editor_BCC (1).html`
 **Date:** 2026-10-20
 
+> **Updated 2026-10-21:** the sidewalk extension is now a lever (`handover_sidewalk_extension/`), and lane 4/5 needs carsharing (`handover_centre_lane_gate/`). The rules below are as of 2026-10-20. `check_ew_slots.js` checks those rules; run it against `archive/update_before-sidewalk-extension.json`.
+
 ## Summary
 
 The east–west street has **4 lane slots per direction**. Both directions are mirrored, so there are 8 in all. Players fill those slots, and every lane type competes for them. If a player builds a bike lane, a bus lane and the tram, only one car lane still fits.

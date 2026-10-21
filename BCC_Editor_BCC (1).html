@@ -1689,23 +1689,35 @@ function hasRuleOverrideForNode(id){ return Object.prototype.hasOwnProperty.call
 // buildable when every lane gets its own slot that fits it. Like the game, the editor stops a lever where the street is full.
 // A street with filled: true has no empty slot; its fill_with lane takes back what another lane gives up, and gives up
 // the slot another lane takes (on the N-S street, a bike lane replaces a car lane).
+// A slot with requires {node, min} can be used only while that node is at least min (E-W lane 4/5 needs carsharing).
 // yields {mode: [modes]}: raising that mode is never blocked; a listed lane gives up its slot instead (E-W: the
 // sidewalk extension replaces a bike lane on 1/8 that cannot move to 2/7).
 function laneSlotGroups(){ return Array.isArray(projectTop?.lane_slots) ? projectTop.lane_slots.filter(g => g && g.levers && typeof g.levers === 'object' && Array.isArray(g.slots)) : []; }
 function laneSlotValue(id){ const n = nodes.find(x => x.id === id); return n ? getDisplayedActiveNodeValue(n) : 0; }
-function laneLayoutFits(g, val = laneSlotValue, fill = true){
+function laneSlotOpen(s, val = laneSlotValue){ return !s.requires || !s.requires.node || (Number(val(s.requires.node)) || 0) >= (s.requires.min ?? 1); }
+function laneLayoutFits(g, val = laneSlotValue, fill = true, ignoreGates = false){
   const lanes = [];
   Object.entries(g.levers).forEach(([mode, id]) => { const k = Math.max(0, Math.round(Number(val(id)) || 0)); for (let i = 0; i < k; i++) lanes.push(mode); });
+  const open = g.slots.map(s => ignoreGates || laneSlotOpen(s, val));
   if (lanes.length > g.slots.length || (fill && g.filled && lanes.length < g.slots.length)) return false;
   const used = g.slots.map(() => false);
-  const place = i => { if (i === lanes.length) return true; for (let s = 0; s < g.slots.length; s++) if (!used[s] && (g.slots[s].fits || []).includes(lanes[i])){ used[s] = true; if (place(i + 1)) return true; used[s] = false; } return false; };
+  const place = i => { if (i === lanes.length) return true; for (let s = 0; s < g.slots.length; s++) if (!used[s] && open[s] && (g.slots[s].fits || []).includes(lanes[i])){ used[s] = true; if (place(i + 1)) return true; used[s] = false; } return false; };
   return place(0);
 }
+/** slots of g that are locked now, as "lane 4/5 (needs carsharing ≥ 1)" */
+function laneGateText(g){ return g.slots.filter(s => !laneSlotOpen(s)).map(s => `lane ${s.lane} (needs ${s.requires.node} ≥ ${s.requires.min ?? 1})`).join(', '); }
 /** what setting lever `id` to `want` does: v = the value it gets (raising stops where the street is full),
  *  also = {leverId: value} for the fill lane it swaps with, msg = why v differs from want or what was swapped */
 function laneSlotPlan(id, want){
   let v = want, msg = ''; const also = {};
   laneSlotGroups().forEach(g => {
+    // a gate node (slot requires): lowering it stops while a lane still sits on the slot it opens
+    const gated = g.slots.filter(s => s.requires && s.requires.node === id);
+    if (gated.length){
+      const cur = laneSlotValue(id);
+      while (v < cur && laneLayoutFits(g) && !laneLayoutFits(g, x => x === id ? v : laneSlotValue(x), false)) v++;
+      if (v > want) msg = `${g.label || g.id}: lane ${gated.map(s => s.lane).join(', ')} needs ${id} ≥ ${gated[0].requires.min ?? 1} — clear it back to parking first`;
+    }
     if (!Object.values(g.levers).includes(id)) return;
     const cur = laneSlotValue(id), fillId = g.filled ? g.levers[g.fill_with] : null, fillNode = fillId && nodes.find(x => x.id === fillId);
     const mode = Object.keys(g.levers).find(k => g.levers[k] === id);
@@ -1749,6 +1761,8 @@ function laneSlotGroupOf(id){ return laneSlotGroups().find(g => Object.values(g.
 function laneFullMsg(id){
   const g = laneSlotGroupOf(id); if (!g) return '';
   const mode = Object.keys(g.levers).find(k => g.levers[k] === id) || id;
+  const more = x => x === id ? laneSlotValue(id) + 1 : laneSlotValue(x);
+  if (!laneLayoutFits(g, more, false) && laneLayoutFits(g, more, false, true)) return `${g.label || g.id}: no free slot for another ${mode} lane — locked: ${laneGateText(g)}`;
   return `${g.label || g.id}: no free slot for another ${mode} lane — free one first`;
 }
 function getRuleOverrideReason(id){ return activeRuleReasons[id] || ''; }
@@ -2049,7 +2063,7 @@ function computeValidation(){
   laneSlotGroups().forEach(g => {
     const missing = Object.values(g.levers).filter(id => !ids.has(id));
     if (missing.length){ add('game', 'warn', `lane_slots ${g.id}: lever ${missing.join(', ')} missing`, 'counted as 0 lanes'); return; }
-    if (!laneLayoutFits(g)) add('game', 'warn', `${g.label || g.id}: the game cannot build this layout`, Object.entries(g.levers).map(([m, id]) => `${m} ${laneSlotValue(id)}`).join(' · ') + ` in ${g.slots.length} slots per direction — ` + (laneLayoutFits(g, laneSlotValue, false) ? `every slot needs a lane, raise ${g.fill_with || 'a lever'}` : 'lower a lever'), {node: Object.values(g.levers)[0]});
+    if (!laneLayoutFits(g)) add('game', 'warn', `${g.label || g.id}: the game cannot build this layout`, Object.entries(g.levers).map(([m, id]) => `${m} ${laneSlotValue(id)}`).join(' · ') + ` in ${g.slots.length} slots per direction — ` + (laneLayoutFits(g, laneSlotValue, false) ? `every slot needs a lane, raise ${g.fill_with || 'a lever'}` : laneLayoutFits(g, laneSlotValue, false, true) ? `locked: ${laneGateText(g)}` : 'lower a lever'), {node: Object.values(g.levers)[0]});
   });
   GAME_OUTPUT_IDS.forEach(id => { if (!ids.has(id)) add('game', 'warn', `output ${id} missing`, 'GetOutputs() falls back to a hard-coded default'); });
   GAME_INPUT_IDS.forEach(id => { if (!ids.has(id)) add('game', 'warn', `input ${id} missing`, 'the Blueprint dropdown entry does nothing'); else if (byId.get(id).type !== 'active') add('game', 'warn', `input ${id} is not active`, `typed ${byId.get(id).type}: SetActiveInput writes a value the solve overwrites`, {node: id}); });
