@@ -1689,6 +1689,8 @@ function hasRuleOverrideForNode(id){ return Object.prototype.hasOwnProperty.call
 // buildable when every lane gets its own slot that fits it. Like the game, the editor stops a lever where the street is full.
 // A street with filled: true has no empty slot; its fill_with lane takes back what another lane gives up, and gives up
 // the slot another lane takes (on the N-S street, a bike lane replaces a car lane).
+// yields {mode: [modes]}: raising that mode is never blocked; a listed lane gives up its slot instead (E-W: the
+// sidewalk extension replaces a bike lane on 1/8 that cannot move to 2/7).
 function laneSlotGroups(){ return Array.isArray(projectTop?.lane_slots) ? projectTop.lane_slots.filter(g => g && g.levers && typeof g.levers === 'object' && Array.isArray(g.slots)) : []; }
 function laneSlotValue(id){ const n = nodes.find(x => x.id === id); return n ? getDisplayedActiveNodeValue(n) : 0; }
 function laneLayoutFits(g, val = laneSlotValue, fill = true){
@@ -1706,10 +1708,26 @@ function laneSlotPlan(id, want){
   laneSlotGroups().forEach(g => {
     if (!Object.values(g.levers).includes(id)) return;
     const cur = laneSlotValue(id), fillId = g.filled ? g.levers[g.fill_with] : null, fillNode = fillId && nodes.find(x => x.id === fillId);
+    const mode = Object.keys(g.levers).find(k => g.levers[k] === id);
     if (fillNode && fillId !== id && !hasRuleOverrideForNode(fillId)){
       const fCur = laneSlotValue(fillId), fOf = x => Math.max(getActiveControlMin(fillNode), Math.min(getActiveControlMax(fillNode), fCur - (x - cur)));
       while (v > cur && !laneLayoutFits(g, x => x === id ? v : x === fillId ? fOf(v) : laneSlotValue(x), false)) v--;
       if (fOf(v) !== fCur){ also[fillId] = fOf(v); msg = `${g.label || g.id}: ${g.fill_with} lanes ${fCur} → ${fOf(v)}`; }
+    } else if (want > cur && Array.isArray(g.yields?.[mode]) && !laneLayoutFits(g, x => x === id ? want : laneSlotValue(x), false)){
+      // this lane is never blocked: the lanes it yields to give up their slot, one at a time, until it fits
+      const low = {};
+      const valOf = x => x === id ? want : x in low ? low[x] : laneSlotValue(x);
+      for (const ym of g.yields[mode]){
+        const yId = g.levers[ym], yNode = yId && nodes.find(x => x.id === yId); if (!yNode || hasRuleOverrideForNode(yId)) continue;
+        low[yId] = laneSlotValue(yId);
+        while (low[yId] > getActiveControlMin(yNode) && !laneLayoutFits(g, valOf, false)) low[yId]--;
+        if (laneLayoutFits(g, valOf, false)) break;
+      }
+      if (laneLayoutFits(g, valOf, false)){
+        Object.entries(low).forEach(([yId, x]) => { if (x !== laneSlotValue(yId)) also[yId] = x; });
+        const gave = Object.keys(also).map(yId => Object.keys(g.levers).find(k => g.levers[k] === yId));
+        if (gave.length) msg = `${g.label || g.id}: the ${mode} takes the ${gave.join(', ')} lane's slot (no other free slot) — ${gave.join(', ')} lanes ${Object.keys(also).map(yId => `${laneSlotValue(yId)} → ${also[yId]}`).join(', ')}`;
+      } else while (v > cur && !laneLayoutFits(g, x => x === id ? v : laneSlotValue(x), false)) v--;
     } else {
       while (v > cur && !laneLayoutFits(g, x => x === id ? v : laneSlotValue(x), false)) v--;
       if (fillId === id && v < cur && laneLayoutFits(g) && !laneLayoutFits(g, x => x === id ? v : laneSlotValue(x))){ v = cur; msg = `${g.label || g.id}: every slot needs a lane — switch a ${g.fill_with} lane to another lane type instead`; }

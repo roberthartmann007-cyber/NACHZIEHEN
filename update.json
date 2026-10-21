@@ -1677,16 +1677,18 @@
       "influenced_by": [
         "car_lanes_spawn_2",
         "bus_lanes_spawn_2",
-        "tram_line_center"
+        "tram_line_center",
+        "bike_lanes_spawn_2",
+        "sidewalk_extension_spawn_2"
       ],
-      "notes": "2026-10-20 (E-W lane slots): NEW. East-west car lanes per direction that the street can actually hold. the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. Car lanes fit on 2/7, 3/6 and 4/5, so at most 3; a bus lane and the tram each take one of them. A bike lane does not, because it always fits on 1/8. The editor already stops the levers at what fits, and so does the game, so normally this equals car_lanes_spawn_2. It is the guard for files saved with a layout that does not fit: then car lanes give way.",
+      "notes": "2026-10-21 (sidewalk extension on 1/8): A bike lane behind a sidewalk extension sits on 2/7 and takes a car slot, so the guard subtracts min(bike_lanes_spawn_2, sidewalk_extension_spawn_2). 2026-10-20 (E-W lane slots): NEW. East-west car lanes per direction that the street can actually hold. the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. Car lanes fit on 2/7, 3/6 and 4/5, so at most 3; a bus lane and the tram each take one of them. A bike lane does not, because it always fits on 1/8. The editor already stops the levers at what fits, and so does the game, so normally this equals car_lanes_spawn_2. It is the guard for files saved with a layout that does not fit: then car lanes give way.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "max(0, min(car_lanes_spawn_2, 3 - bus_lanes_spawn_2 - tram_line_center))"
+        "expression": "max(0, min(car_lanes_spawn_2, 3 - bus_lanes_spawn_2 - tram_line_center - min(bike_lanes_spawn_2, sidewalk_extension_spawn_2)))"
       },
       "baseline_value": 0,
       "value": 0,
@@ -1989,9 +1991,11 @@
       "label": "bike_lanes_spawn_2 (E-W, set at SP 1)",
       "type": "active",
       "status": "defined",
-      "influences": [],
+      "influences": [
+        "car_lanes_spawn_2_fit"
+      ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W lane slots): the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. A bike lane fits on 1/8 (or on 2/7 behind a sidewalk extension, which is the same in the sim), so it never costs a car lane. Max 1 per direction: one lane as wide as a car lane carries about 4,000 bikes/h at a signal. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bike_lanes_spawn_3, which was removed. Still one lane per direction.",
+      "notes": "2026-10-21 (sidewalk extension on 1/8): With a sidewalk extension on 1/8 (sidewalk_extension_spawn_2 = 1) the bike lane goes on 2/7 and costs a car lane; without one it goes on 1/8 and costs nothing. Supersedes \"never costs a car lane\" below. 2026-10-20 (E-W lane slots): the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. A bike lane fits on 1/8 (or on 2/7 behind a sidewalk extension, which is the same in the sim), so it never costs a car lane. Max 1 per direction: one lane as wide as a car lane carries about 4,000 bikes/h at a signal. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bike_lanes_spawn_3, which was removed. Still one lane per direction.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -2013,6 +2017,38 @@
       "evidence_status": "",
       "_x": -470,
       "_y": -990
+    },
+    {
+      "id": "sidewalk_extension_spawn_2",
+      "label": "sidewalk_extension_spawn_2 (E-W, set at SP 2, lane 1/8)",
+      "type": "active",
+      "status": "defined",
+      "influences": [
+        "car_lanes_spawn_2_fit"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 0,
+      "value": 0,
+      "min": 0,
+      "max": 1,
+      "active_control": "slider",
+      "active_order": 15,
+      "active_states": {
+        "a": 0,
+        "b": 1
+      },
+      "evidence_status": "",
+      "_x": -470,
+      "_y": -870
     },
     {
       "id": "bike_lanes_spawn_4",
@@ -7424,6 +7460,30 @@
       "color": "",
       "issue_status": "none",
       "issue_priority": 0
+    },
+    "bike_lanes_spawn_2->car_lanes_spawn_2_fit": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "sidewalk_extension_spawn_2->car_lanes_spawn_2_fit": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
     }
   },
   "system_rules": [
@@ -7453,14 +7513,16 @@
         "car": "car_lanes_spawn_2",
         "bus": "bus_lanes_spawn_2",
         "bike": "bike_lanes_spawn_2",
-        "tram": "tram_line_center"
+        "tram": "tram_line_center",
+        "extension": "sidewalk_extension_spawn_2"
       },
       "slots": [
         {
           "lane": "1/8",
           "default": "parking",
           "fits": [
-            "bike"
+            "bike",
+            "extension"
           ]
         },
         {
@@ -7489,7 +7551,12 @@
           ]
         }
       ],
-      "notes": "Each lever value is a number of lanes per direction. A layout is buildable when every lane can be given its own slot that fits it. Parking, sidewalk extension and sport terrain fill a slot but have no effect in the sim, so they are not listed. A bike lane on 2/7 needs a sidewalk extension on 1/8 in the game; in the sim it is the same as a bike lane on 1/8."
+      "notes": "Each lever value is a number of lanes per direction. A layout is buildable when every lane can be given its own slot that fits it. The sidewalk extension fits only on 1/8; parking and sport terrain fill a slot but have no effect in the sim, so they are not listed. A bike lane goes on 1/8, or on 2/7 when 1/8 holds the extension. yields: choosing the extension is never blocked; if the bike lane cannot move to 2/7, the extension replaces it.",
+      "yields": {
+        "extension": [
+          "bike"
+        ]
+      }
     },
     {
       "id": "ns_street",
@@ -8076,7 +8143,7 @@
         "label": "sidewalk_extension",
         "unlockedElemId": "id_336",
         "elemId": "id_5",
-        "node_id": "car_lanes_spawn_2"
+        "node_id": "sidewalk_extension_spawn_2"
       },
       "id_13": {
         "id": "id_13",
@@ -8197,7 +8264,8 @@
         "id": "id_339",
         "label": "bike_lane_2_mirrored_7",
         "unlockedElemId": null,
-        "elemId": "id_336"
+        "elemId": "id_336",
+        "node_id": "bike_lanes_spawn_2"
       },
       "id_340": {
         "id": "id_340",
