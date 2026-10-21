@@ -19,12 +19,11 @@
       "influenced_by": [
         "speed_limit",
         "bike_lane_protection",
-        "parallel_parking",
         "bike_parking",
         "protected_intersection",
         "total_bike_lanes"
       ],
-      "notes": "2026-10-02 (CTS lane-layout study): the lane term is max(10, total_bike_lanes*10), so without a bike lane the attractiveness stays at the one-lane value and only the 0.35 availability gate in mode_util/bike_spawn_count reduces cycling (to about a third); before, every live term was 0 without a lane, the gate multiplied zero and the street lost ALL cyclists. With a lane the value is unchanged. Cycling attractiveness. The availability gate that decides whether cycling COMPETES for trips is not here - it is in mode_util_spawn_2/3/4 and bike_spawn_count_2/3/4, where since 2026-09-05 it is 0.35 + 0.65*min(1, total_bike_lanes/2) rather than min(1, bike_lanes_spawn_N). Two things to know about this formula. First, `base` here is not baseline_value: parallel_parking and bike_parking are parents that the expression does not mention, so the solver hands their edge aggregate in as `base`. Second, speed_limit*18 makes cycling MORE attractive as the speed limit rises, which looks like a sign error; it is left alone because it is the author's call, not ours. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
+      "notes": "2026-10-21 (kerb space in the sim): parallel_parking is no longer a parent: the dooring penalty (−4.9 at 27 spaces) is gone, because in the game a bike lane never runs next to parked cars. 2026-10-02 (CTS lane-layout study): the lane term is max(10, total_bike_lanes*10), so without a bike lane the attractiveness stays at the one-lane value and only the 0.35 availability gate in mode_util/bike_spawn_count reduces cycling (to about a third); before, every live term was 0 without a lane, the gate multiplied zero and the street lost ALL cyclists. With a lane the value is unchanged. Cycling attractiveness. The availability gate that decides whether cycling COMPETES for trips is not here - it is in mode_util_spawn_2/3/4 and bike_spawn_count_2/3/4, where since 2026-09-05 it is 0.35 + 0.65*min(1, total_bike_lanes/2) rather than min(1, bike_lanes_spawn_N). Two things to know about this formula. First, `base` here is not baseline_value: parallel_parking and bike_parking are parents that the expression does not mention, so the solver hands their edge aggregate in as `base`. Second, speed_limit*18 makes cycling MORE attractive as the speed limit rises, which looks like a sign error; it is left alone because it is the author's call, not ours. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
       "priority": "medium",
       "value_kind": "score",
       "unit": "",
@@ -404,25 +403,25 @@
       "type": "active",
       "status": "defined",
       "influences": [
-        "parallel_parking",
-        "lane_4_5_open"
+        "lane_4_5_open",
+        "cars_replaced"
       ],
       "influenced_by": [],
-      "notes": "2026-10-21 (lane 4/5 needs carsharing): Building carsharing (>= 1) at SP 4 opens the centre lane 4/5 at SP 3 (lane_4_5_open). Average replacement rates of carsharing vehicles in Berlin around -9\n\nhttps://www.mdpi.com/2071-1050/13/13/7384",
+      "notes": "2026-10-21 (kerb space in the sim): Now one 0/1 decision at SP 4 (was a 0–5 count placed across the map). Building it places carsharing_stations stations across the map, takes cars_replaced private cars off the map and empties lane 4/5 (lane_4_5_open). Its old direct link into parallel_parking (−9 per unit) is replaced by cars_replaced. 2026-10-21 (lane 4/5 needs carsharing): Building carsharing (>= 1) at SP 4 opens the centre lane 4/5 at SP 3 (lane_4_5_open). Average replacement rates of carsharing vehicles in Berlin around -9\n\nhttps://www.mdpi.com/2071-1050/13/13/7384",
       "priority": "",
       "value_kind": "absolute",
-      "unit": "count",
+      "unit": "",
       "passive_precision": "decimals",
       "node_formula": null,
       "baseline_value": 0,
       "value": 0,
       "min": 0,
-      "max": 5,
+      "max": 1,
       "active_control": "slider",
       "active_order": 0,
       "active_states": {
         "a": 0,
-        "b": 3
+        "b": 1
       },
       "evidence_status": "",
       "_x": 1760,
@@ -834,16 +833,17 @@
       ],
       "influenced_by": [
         "cafe",
-        "urban_furniture"
+        "urban_furniture",
+        "sidewalk_extension_spawn_2"
       ],
-      "notes": "public amenities and destiation increase public space quality and account for one third of the entire index\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating cafe/seating activity curve with assumed weights: cafe 0.45, urban_furniture 0.40, cafe x seating synergy 0.15; saturation rate 2.4 is an assumption.",
+      "notes": "2026-10-21 (kerb space in the sim): Adds 0.05 × sidewalk_extension_spawn_2 inside the curve. [FLAG] size is a judgment. public amenities and destiation increase public space quality and account for one third of the entire index\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating cafe/seating activity curve with assumed weights: cafe 0.45, urban_furniture 0.40, cafe x seating synergy 0.15; saturation rate 2.4 is an assumption.",
       "priority": "",
       "value_kind": "score",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "100*(1 - exp(-2.4*( 0.45*min(1,cafe/2) + 0.40*min(1,urban_furniture/6) + 0.15*min(1,cafe/2)*min(1,urban_furniture/6) )))"
+        "expression": "100*(1 - exp(-2.4*( 0.45*min(1,cafe/2) + 0.40*min(1,urban_furniture/6) + 0.15*min(1,cafe/2)*min(1,urban_furniture/6) + 0.05*sidewalk_extension_spawn_2 )))"
       },
       "baseline_value": 0,
       "value": 50,
@@ -963,16 +963,17 @@
       "influenced_by": [
         "public_space_quality",
         "urban_furniture",
-        "rain"
+        "rain",
+        "sidewalk_extension_area"
       ],
-      "notes": "Idling pedestrians — max 770 at a peak moment (ideal scenario)\nCounted across 4,235 m² of idle-eligible area (30% of the 3,650 m² sidewalk + 40% of reclaimed roadway in the post-redesign state). Build-up: café terraces (340), signal-wait queues at five crossings (150), induced plaza idlers (150), sidewalk lingerers (70), tram M8 + bus 142 stop waiters (60). Resulting density ~5.5 m²/person — Fruin LOS A, comfortable lingering. Festival ceiling sits separately at ~1,100+ under managed-event density (2 ped/m²).\n\n\n Fruin, Pedestrian Planning and Design (1971) · NCHRP Report 616 — Multimodal LOS · Barcelona superblock evaluation (BCNecologia) · Copenhagen Strøget pedestrianisation (Gehl Architects) · BVG line network & ridership data\n\n[2026-07-05] Curve redesign: linear PSQ mapping replaced by logistic S-curve: 770/(1+exp(-(public_space_quality-55)/12)). This keeps low-quality places from producing many lingerers while saturating near the observed peak-moment ceiling.",
+      "notes": "2026-10-21 (kerb space in the sim): The lingering ceiling is 770 + 0.40 × sidewalk_extension_area / 5.5 (about +19 people for 260 m²). Idling pedestrians — max 770 at a peak moment (ideal scenario)\nCounted across 4,235 m² of idle-eligible area (30% of the 3,650 m² sidewalk + 40% of reclaimed roadway in the post-redesign state). Build-up: café terraces (340), signal-wait queues at five crossings (150), induced plaza idlers (150), sidewalk lingerers (70), tram M8 + bus 142 stop waiters (60). Resulting density ~5.5 m²/person — Fruin LOS A, comfortable lingering. Festival ceiling sits separately at ~1,100+ under managed-event density (2 ped/m²).\n\n\n Fruin, Pedestrian Planning and Design (1971) · NCHRP Report 616 — Multimodal LOS · Barcelona superblock evaluation (BCNecologia) · Copenhagen Strøget pedestrianisation (Gehl Architects) · BVG line network & ridership data\n\n[2026-07-05] Curve redesign: linear PSQ mapping replaced by logistic S-curve: 770/(1+exp(-(public_space_quality-55)/12)). This keeps low-quality places from producing many lingerers while saturating near the observed peak-moment ceiling.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
       "passive_precision": "rounded",
       "node_formula": {
         "enabled": true,
-        "expression": "770/(1+exp(-(public_space_quality-55)/12)) * min(1, 0.3 + 0.7*min(1, urban_furniture/6)) * (1 - 0.50*rain)"
+        "expression": "(770 + 0.40*sidewalk_extension_area/5.5)/(1+exp(-(public_space_quality-55)/12)) * min(1, 0.3 + 0.7*min(1, urban_furniture/6)) * (1 - 0.50*rain)"
       },
       "baseline_value": 50,
       "value": 770,
@@ -1539,35 +1540,503 @@
     },
     {
       "id": "parallel_parking",
-      "label": "cars_parking_parallel to side walk",
+      "label": "parking spaces on the map (kerb parking supply)",
       "type": "passive",
       "status": "defined",
       "influences": [
-        "car_attractivity_general",
-        "mob_attract_bikes"
+        "parking_occupancy"
       ],
       "influenced_by": [
-        "carsharing"
+        "parking_spaces_map",
+        "spaces_1_8",
+        "spaces_4_5",
+        "sidewalk_extension_spawn_2",
+        "bike_lanes_spawn_2",
+        "lane_4_5_open"
       ],
-      "notes": "",
+      "notes": "2026-10-21 (kerb space in the sim): Id kept, meaning changed: public parking spaces left on the map. Reference 180; lane 1/8 loses its 22 spaces to a sidewalk extension or a bike lane; lane 4/5 loses its 52 spaces as soon as carsharing is built (the game empties it). Carsharing no longer subtracts here. The dooring edge into mob_attract_bikes was removed: in the game a bike lane never runs next to parking.",
       "priority": "",
       "value_kind": "absolute",
-      "unit": "",
+      "unit": "spaces",
       "passive_precision": "rounded",
       "node_formula": {
-        "enabled": false,
-        "expression": ""
+        "enabled": true,
+        "expression": "parking_spaces_map - spaces_1_8*(1 - (1-sidewalk_extension_spawn_2)*(1-bike_lanes_spawn_2)) - spaces_4_5*lane_4_5_open"
       },
-      "baseline_value": 27,
-      "value": 27,
+      "baseline_value": 180,
+      "value": 180,
       "min": 0,
-      "max": 100,
+      "max": 400,
       "active_control": null,
       "active_order": null,
       "active_states": null,
       "evidence_status": "",
       "_x": 2330,
       "_y": -1590
+    },
+    {
+      "id": "parking_spaces_map",
+      "label": "parking_spaces_map",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "parallel_parking",
+        "private_cars_parked",
+        "cars_replaced_share"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Reference: all public parking spaces in the map area today. [FLAG] provisional orientation value from the design team; replace with the counted number.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "spaces",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 180,
+      "value": 180,
+      "min": 0,
+      "max": 720,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -1470
+    },
+    {
+      "id": "parking_occupancy_ref",
+      "label": "parking_occupancy_ref",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "private_cars_parked",
+        "parking_availability",
+        "cars_replaced_share"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Reference occupancy (Auslastung) of those spaces today: 0.90, so about 162 private cars are parked. [FLAG] inner-city assumption, plausible range 0.8–1.0. Berlin Tegel (outer residential) measured 77–80 %; inner-city residents' zones reach over 100 % (Cologne).",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "share",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 0.9,
+      "value": 0.9,
+      "min": 0,
+      "max": 3.6,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -1350
+    },
+    {
+      "id": "spaces_1_8",
+      "label": "spaces_1_8",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "parallel_parking"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Parking spaces on lane 1/8 (outer E-W lane), both sides. [FLAG] estimate: lane 4/5 holds 26 perpendicular stalls per side, about 65 m; the same length fits about 11 parallel stalls per side (EAR 05, about 5.7 m per stall).",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "spaces",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 22,
+      "value": 22,
+      "min": 0,
+      "max": 88,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -1230
+    },
+    {
+      "id": "spaces_4_5",
+      "label": "spaces_4_5",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "parallel_parking"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Parking spaces on the centre lane 4/5: 26 east + 26 west. Design-team value. Building carsharing empties them.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "spaces",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 52,
+      "value": 52,
+      "min": 0,
+      "max": 208,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -1110
+    },
+    {
+      "id": "cars_replaced_per_shared_car",
+      "label": "cars_replaced_per_shared_car",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "cars_replaced"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Private cars one shared car replaces. Berlin value already used in the model (MDPI 2021, https://www.mdpi.com/2071-1050/13/13/7384). bcs 2023 reports 15 on average for station-based carsharing, free-floating replaces far fewer, so the network must be station-based.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "cars",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 9,
+      "value": 9,
+      "min": 0,
+      "max": 36,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -990
+    },
+    {
+      "id": "carsharing_stations",
+      "label": "carsharing_stations",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "carsharing_cars"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Stations the carsharing network places across the map once carsharing is built at SP 4. Sized to absorb the 52 cars from lane 4/5: 52 / 9 = 5.8, so 6 shared cars, at 2 per station 3 stations. [FLAG] sizing rule and station size are assumptions. The stations sit in pocket modules, not in the 180 spaces.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "stations",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 3,
+      "value": 3,
+      "min": 0,
+      "max": 12,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -870
+    },
+    {
+      "id": "cars_per_carsharing_station",
+      "label": "cars_per_carsharing_station",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "carsharing_cars"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Shared cars per station. [FLAG] assumption for small Berlin station-based stations.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "cars",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 2,
+      "value": 2,
+      "min": 0,
+      "max": 8,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -750
+    },
+    {
+      "id": "extension_segment_length_m",
+      "label": "extension_segment_length_m",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "sidewalk_extension_area"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Length of the E-W sidewalk extension per side, inside the map. [FLAG] estimate from 26 perpendicular stalls at about 2.5 m on lane 4/5; measure from the plan.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "m",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 65,
+      "value": 65,
+      "min": 0,
+      "max": 260,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -630
+    },
+    {
+      "id": "carsharing_cars",
+      "label": "carsharing_cars",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "cars_replaced"
+      ],
+      "influenced_by": [
+        "carsharing_stations",
+        "cars_per_carsharing_station"
+      ],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Shared cars in the network: stations × cars per station (6).",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "cars",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "carsharing_stations*cars_per_carsharing_station"
+      },
+      "baseline_value": 1,
+      "value": 1.1,
+      "min": 0,
+      "max": 50,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -510
+    },
+    {
+      "id": "cars_replaced",
+      "label": "cars_replaced",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "private_cars_parked",
+        "cars_replaced_share"
+      ],
+      "influenced_by": [
+        "carsharing",
+        "carsharing_cars",
+        "cars_replaced_per_shared_car"
+      ],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Private cars the network takes off the map once carsharing is built: 6 × 9 = 54, enough for the 52 cars of lane 4/5.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "cars",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "carsharing*carsharing_cars*cars_replaced_per_shared_car"
+      },
+      "baseline_value": 1,
+      "value": 1.1,
+      "min": 0,
+      "max": 500,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -390
+    },
+    {
+      "id": "private_cars_parked",
+      "label": "private_cars_parked",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "parking_occupancy"
+      ],
+      "influenced_by": [
+        "parking_spaces_map",
+        "parking_occupancy_ref",
+        "cars_replaced"
+      ],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Private cars that need a space: today 180 × 0.90 = 162, minus the cars the carsharing network replaces.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "cars",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "parking_spaces_map*parking_occupancy_ref - cars_replaced"
+      },
+      "baseline_value": 1,
+      "value": 1.1,
+      "min": 0,
+      "max": 400,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -270
+    },
+    {
+      "id": "parking_occupancy",
+      "label": "parking_occupancy",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "parking_availability"
+      ],
+      "influenced_by": [
+        "private_cars_parked",
+        "parallel_parking"
+      ],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Parked private cars per space: 0.90 today. Above 1 means more cars than spaces (searching, double parking).",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "share",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "private_cars_parked/max(1, parallel_parking)"
+      },
+      "baseline_value": 1,
+      "value": 1.1,
+      "min": 0,
+      "max": 5,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -150
+    },
+    {
+      "id": "parking_availability",
+      "label": "parking_availability",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "car_attractivity_general"
+      ],
+      "influenced_by": [
+        "parking_occupancy_ref",
+        "parking_occupancy"
+      ],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Parking availability relative to today: 1.0 today, lower when spaces get scarcer. Feeds car_attractivity_general on the scale of the old parking term.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "ratio",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "parking_occupancy_ref/max(0.01, parking_occupancy)"
+      },
+      "baseline_value": 1,
+      "value": 1.1,
+      "min": 0,
+      "max": 5,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": -30
+    },
+    {
+      "id": "cars_replaced_share",
+      "label": "cars_replaced_share",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "car_attractivity_general"
+      ],
+      "influenced_by": [
+        "cars_replaced",
+        "parking_spaces_map",
+        "parking_occupancy_ref"
+      ],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. Share of today's parked private cars the carsharing network replaces (54 / 162 = 0.33).",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "share",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "cars_replaced/max(1, parking_spaces_map*parking_occupancy_ref)"
+      },
+      "baseline_value": 1,
+      "value": 1.1,
+      "min": 0,
+      "max": 1,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": 90
+    },
+    {
+      "id": "sidewalk_extension_area",
+      "label": "sidewalk_extension_area",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "pedestrians_stationary"
+      ],
+      "influenced_by": [
+        "sidewalk_extension_spawn_2",
+        "extension_segment_length_m"
+      ],
+      "notes": "2026-10-21 (kerb space in the sim): NEW. New sidewalk area from the extension on lane 1/8: both sides × length × 2.0 m (width of the parking strip it replaces, RASt 06). 260 m² with the [FLAG] 65 m estimate.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "m²",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "2*sidewalk_extension_spawn_2*extension_segment_length_m*2.0"
+      },
+      "baseline_value": 1,
+      "value": 1.1,
+      "min": 0,
+      "max": 2000,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 2330,
+      "_y": 210
     },
     {
       "id": "bike_parking",
@@ -1789,17 +2258,18 @@
       ],
       "influenced_by": [
         "speed_limit",
-        "parallel_parking",
-        "total_car_lanes"
+        "total_car_lanes",
+        "parking_availability",
+        "cars_replaced_share"
       ],
-      "notes": "",
+      "notes": "2026-10-21 (kerb space in the sim): Parking term now reads parking_availability (1.0 today, so +6 as before) instead of parallel_parking/18, and an ownership term −20 × cars_replaced_share is added. [FLAG] the −20 is assumed.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "base  - speed_limit*5  + max(-15, min(8, 12*(parallel_parking/18 - 1)))  + 40*( (total_car_lanes/(total_car_lanes + total_bike_lanes + total_bus_lanes + 0.001)) * (total_car_lanes/(total_car_lanes + total_bike_lanes + total_bus_lanes + 0.001)) * (3 - 2*(total_car_lanes/(total_car_lanes + total_bike_lanes + total_bus_lanes + 0.001))) - 0.5 )"
+        "expression": "base  - speed_limit*5  + max(-15, min(8, 12*(1.5*parking_availability - 1))) - 20*cars_replaced_share  + 40*( (total_car_lanes/(total_car_lanes + total_bike_lanes + total_bus_lanes + 0.001)) * (total_car_lanes/(total_car_lanes + total_bike_lanes + total_bus_lanes + 0.001)) * (3 - 2*(total_car_lanes/(total_car_lanes + total_bike_lanes + total_bus_lanes + 0.001))) - 0.5 )"
       },
       "baseline_value": 50,
       "value": 50,
@@ -1994,7 +2464,8 @@
       "type": "active",
       "status": "defined",
       "influences": [
-        "car_lanes_spawn_2_fit"
+        "car_lanes_spawn_2_fit",
+        "parallel_parking"
       ],
       "influenced_by": [],
       "notes": "2026-10-21 (sidewalk extension on 1/8): With a sidewalk extension on 1/8 (sidewalk_extension_spawn_2 = 1) the bike lane goes on 2/7 and costs a car lane; without one it goes on 1/8 and costs nothing. Supersedes \"never costs a car lane\" below. 2026-10-20 (E-W lane slots): the east-west street has 4 lane slots per direction, mirrored: 1/8 outer, 2/7, 3/6, 4/5 centre (see lane_slots in the project file). Default: parking on 1/8 and 4/5, car lanes on 2/7 and 3/6. A bike lane fits on 1/8 (or on 2/7 behind a sidewalk extension, which is the same in the sim), so it never costs a car lane. Max 1 per direction: one lane as wide as a car lane carries about 4,000 bikes/h at a signal. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now sets both directions: spawn 2 reads it directly and spawn 3 reads it in place of bike_lanes_spawn_3, which was removed. Still one lane per direction.",
@@ -2026,10 +2497,13 @@
       "type": "active",
       "status": "defined",
       "influences": [
-        "car_lanes_spawn_2_fit"
+        "car_lanes_spawn_2_fit",
+        "parallel_parking",
+        "sidewalk_extension_area",
+        "space_activity_index"
       ],
       "influenced_by": [],
-      "notes": "2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
+      "notes": "2026-10-21 (kerb space in the sim): Now has effects: parking spaces (−22), lingering capacity (sidewalk_extension_area) and a small activity term (space_activity_index). 2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -2824,7 +3298,8 @@
       "status": "defined",
       "influences": [
         "tram_line_center_fit",
-        "car_lanes_spawn_2_fit"
+        "car_lanes_spawn_2_fit",
+        "parallel_parking"
       ],
       "influenced_by": [
         "carsharing"
@@ -4703,41 +5178,6 @@
       "issue_status": "unresolved",
       "issue_priority": 90
     },
-    "carsharing->parallel_parking": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "empirical",
-      "confidence": "",
-      "weight": 1,
-      "formula": {
-        "type": "linear_scale",
-        "mode": "absolute",
-        "slope": -9,
-        "intercept": 0,
-        "label": ""
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 150
-    },
-    "parallel_parking->mob_attract_bikes": {
-      "value": "",
-      "source": "",
-      "notes": "two evidence-backed effects at once: removing the door zone cuts dooring (~2 cyclist crashes/day in Berlin) → bikes +3/strip; and cutting guaranteed kerbside storage is the strongest single lever on car use (parking demand price-elasticity ≈ −0.3) → cars −5/strip. \n\nhttps://www.sciencedirect.com/science/article/pii/S0965856416301525\n\nhttps://www.sciencedirect.com/science/article/abs/pii/S0965856417308832\n\nhttps://interaktiv.tagesspiegel.de/lab/das-sind-berlins-unfallschwerpunkte-fuer-radfahrende/",
-      "status": "empirical",
-      "confidence": "",
-      "weight": 1,
-      "formula": {
-        "type": "normalized_linear",
-        "max_node_impact": -18,
-        "intercept": 0,
-        "label": ""
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 150
-    },
     "bike_parking->mob_attract_bikes": {
       "value": "",
       "source": "",
@@ -4771,23 +5211,6 @@
       "color": "",
       "issue_status": "unresolved",
       "issue_priority": 210
-    },
-    "parallel_parking->car_attractivity_general": {
-      "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": {
-        "type": "normalized_linear",
-        "max_node_impact": 15,
-        "intercept": 0,
-        "label": ""
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 240
     },
     "supermarket->new_typologies": {
       "value": "",
@@ -7598,6 +8021,330 @@
       "color": "",
       "issue_status": "none",
       "issue_priority": 0
+    },
+    "carsharing_stations->carsharing_cars": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "cars_per_carsharing_station->carsharing_cars": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "carsharing->cars_replaced": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "carsharing_cars->cars_replaced": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "cars_replaced_per_shared_car->cars_replaced": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_spaces_map->parallel_parking": {
+      "value": "",
+      "source": "",
+      "notes": "geometry: spaces each lane holds or loses",
+      "status": "empirical",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "spaces_1_8->parallel_parking": {
+      "value": "",
+      "source": "",
+      "notes": "geometry: spaces each lane holds or loses",
+      "status": "empirical",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "spaces_4_5->parallel_parking": {
+      "value": "",
+      "source": "",
+      "notes": "geometry: spaces each lane holds or loses",
+      "status": "empirical",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "sidewalk_extension_spawn_2->parallel_parking": {
+      "value": "",
+      "source": "",
+      "notes": "geometry: spaces each lane holds or loses",
+      "status": "empirical",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "bike_lanes_spawn_2->parallel_parking": {
+      "value": "",
+      "source": "",
+      "notes": "geometry: spaces each lane holds or loses",
+      "status": "empirical",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "lane_4_5_open->parallel_parking": {
+      "value": "",
+      "source": "",
+      "notes": "geometry: spaces each lane holds or loses",
+      "status": "empirical",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_spaces_map->private_cars_parked": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_occupancy_ref->private_cars_parked": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "cars_replaced->private_cars_parked": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "private_cars_parked->parking_occupancy": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parallel_parking->parking_occupancy": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_occupancy_ref->parking_availability": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_occupancy->parking_availability": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "cars_replaced->cars_replaced_share": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_spaces_map->cars_replaced_share": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_occupancy_ref->cars_replaced_share": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "parking_availability->car_attractivity_general": {
+      "value": "",
+      "source": "Christiansen et al. 2017, TR-A 95:198-206 (parking availability is among the strongest determinants of car use); existing parking elasticity source of this model.",
+      "notes": "Same curve as the old parallel_parking/18 term: availability 1 (today) gives +6, as before.",
+      "status": "empirical",
+      "confidence": "medium",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "cars_replaced_share->car_attractivity_general": {
+      "value": "",
+      "source": "MDPI 2021 Berlin replacement rate; bcs 2023.",
+      "notes": "[FLAG] ownership term −20 × replaced share: carsharing members own fewer cars and drive less; strength assumed (54 of 162 replaced → −6.7).",
+      "status": "assumption",
+      "confidence": "low",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "sidewalk_extension_spawn_2->sidewalk_extension_area": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "extension_segment_length_m->sidewalk_extension_area": {
+      "value": "",
+      "source": "",
+      "notes": "",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "sidewalk_extension_area->pedestrians_stationary": {
+      "value": "",
+      "source": "Fruin 1971 (about 5.5 m² per person, comfortable lingering); this node's 40 % idle-eligible share.",
+      "notes": "The lingering ceiling grows with new sidewalk area. The existing 4,235 m² is the plaza, so the extension adds on top.",
+      "status": "assumption",
+      "confidence": "medium",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
+    },
+    "sidewalk_extension_spawn_2->space_activity_index": {
+      "value": "",
+      "source": "SF Parklet Impact Study 2011 (stationary activity up at all 3 sites); Mehta 2013, The Street.",
+      "notes": "[FLAG] weight 0.05: an extension alone adds about 11 activity points (a third of a café); next to full cafés and furniture about 1 point, so no double counting.",
+      "status": "hypothesis",
+      "confidence": "medium",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
     }
   },
   "system_rules": [
@@ -8364,7 +9111,14 @@
         "label": "carsharing_station",
         "unlockedElemId": null,
         "elemId": "id_326",
-        "node_id": "carsharing"
+        "node_id": "carsharing",
+        "effects": [
+          {
+            "node_id": "carsharing",
+            "op": "set",
+            "value": 1
+          }
+        ]
       },
       "id_332": {
         "id": "id_332",

@@ -80,7 +80,7 @@ E–W at 2*, per hour:
 node handover_centre_lane_gate/check_centre_lane_gate.js
 ```
 
-20 checks: the gate formulas, no raw tram readers left, the spawn `requires`, the saved layout, and all 256 combinations (east–west levers × carsharing 0–3) against the guards.
+20 checks: the gate formulas, no raw tram readers left, the spawn `requires`, the saved layout, and all 128 combinations (east–west levers × carsharing 0/1; carsharing is one decision since chunk 3) against the guards.
 
 **In the editor:** open `update.json`.
 - The car slider stops at 2, and the tram can't be switched on. The message says lane 4/5 needs carsharing.

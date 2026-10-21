@@ -64,10 +64,10 @@ ok(ruleErr < 1e-9, `${FIT} = min(car, 3 − bus − tram − bike on 2/7) with 4
 ok(swapOk === swaps, `parking → extension is possible from every buildable layout (${swaps})`);
 ok(fits(g, { [CAR]: 2, [BIKE]: 1, [EXT]: 1, [BUS]: 0, [TRAM]: 0, [CS]: 1 }) && !fits(g, { [CAR]: 3, [BIKE]: 1, [EXT]: 1, [BUS]: 0, [TRAM]: 0, [CS]: 1 }), 'a bike lane behind the extension takes the 2/7 car slot');
 ok(fits(g, { [CAR]: 3, [BIKE]: 1, [EXT]: 0, [BUS]: 0, [TRAM]: 0, [CS]: 1 }), 'without the extension a bike lane on 1/8 still costs no car lane');
-// no effect yet: with no bike lane, the extension changes no computed value
+// lane counts: with no bike lane, the extension changes no lane count (its parking and public-space effects are chunk 3, handover_kerb_sim/)
 const a = solveAll({ [EXT]: 0, [BIKE]: 0 }), b = solveAll({ [EXT]: 1, [BIKE]: 0 });
-const diff = [...a.keys()].filter(k => k !== EXT && Math.abs((a.get(k) || 0) - (b.get(k) || 0)) > 1e-9);
-ok(!diff.length, 'no public-space effect yet: without a bike lane the extension changes nothing', diff.slice(0, 6).join(', '));
+const diff = [...a.keys()].filter(k => /_lanes|_fit$/.test(k) && k !== EXT && Math.abs((a.get(k) || 0) - (b.get(k) || 0)) > 1e-9);
+ok(!diff.length, 'without a bike lane the extension changes no lane count', diff.slice(0, 6).join(', '));
 
 // reference
 const f1 = (x, n = 1) => x.toFixed(n).padStart(8);

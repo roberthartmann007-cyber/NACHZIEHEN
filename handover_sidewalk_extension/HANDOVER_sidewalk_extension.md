@@ -69,7 +69,7 @@ The first two rows are identical because the extension has no public-space effec
 node handover_sidewalk_extension/check_sidewalk_extension.js
 ```
 
-16 checks: structure, spawn links, all 64 east–west combinations against the guard, free swapping from every buildable layout, and "no other effect yet".
+16 checks: structure, spawn links, all 64 east–west combinations against the guard, free swapping from every buildable layout, and "the extension changes no lane count without a bike lane" (its parking and public-space effects are checked in `handover_kerb_sim/`).
 
 **In the editor:** open `update.json` and set carsharing to 1 and car lanes to 3.
 - Turn the bike lane on: it sits on 1/8.

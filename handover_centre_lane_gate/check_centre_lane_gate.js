@@ -50,7 +50,7 @@ ok(by.get(CAR).value === 2 && fits(g, {}), 'saved layout (car 2, no carsharing) 
 
 // behaviour: every E-W combination × carsharing 0..3
 let agree = 0, ruleErr = 0, combos = 0, lockedBad = 0;
-for (const cs of [0, 1, 2, 3]) for (let car = 0; car <= 3; car++) for (const bike of [0, 1]) for (const bus of [0, 1]) for (const tram of [0, 1]) for (const ext of [0, 1]) {
+for (const cs of [0, 1]) for (let car = 0; car <= 3; car++) for (const bike of [0, 1]) for (const bus of [0, 1]) for (const tram of [0, 1]) for (const ext of [0, 1]) {
   const lv = { [CAR]: car, [BIKE]: bike, [BUS]: bus, [TRAM]: tram, [EXT]: ext, [CS]: cs }, v = solve(lv);
   combos++;
   const open = cs >= 1 ? 1 : 0, tfit = Math.min(tram, open), room = 2 + open - bus - tfit - Math.min(bike, ext);
