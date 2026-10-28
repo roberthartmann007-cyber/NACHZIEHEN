@@ -1588,7 +1588,7 @@
         "cars_replaced_share"
       ],
       "influenced_by": [],
-      "notes": "2026-10-28 (Tier 1 backing): [FLAG] Provisional value, kept at 180 for now. To be revised with a count of the map area. 2026-10-21 (kerb space in the sim): NEW. Reference: all public parking spaces in the map area today. [FLAG] provisional orientation value from the design team; replace with the counted number.",
+      "notes": "2026-10-28 (Tier 4 backing): The count of the map area must include the 38 spaces on lane 1/8 (Tier 4), the 52 on lane 4/5 and the stop spaces. 2026-10-28 (Tier 1 backing): [FLAG] Provisional value, kept at 180 for now. To be revised with a count of the map area. 2026-10-21 (kerb space in the sim): NEW. Reference: all public parking spaces in the map area today. [FLAG] provisional orientation value from the design team; replace with the counted number.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "spaces",
@@ -1647,18 +1647,20 @@
       "influences": [
         "parallel_parking"
       ],
-      "influenced_by": [],
-      "notes": "2026-10-21 (kerb space in the sim): NEW. Parking spaces on lane 1/8 (outer E-W lane), both sides. [FLAG] estimate: lane 4/5 holds 26 perpendicular stalls per side, about 65 m; the same length fits about 11 parallel stalls per side (EAR 05, about 5.7 m per stall).",
+      "influenced_by": [
+        "extension_segment_length_m"
+      ],
+      "notes": "2026-10-28 (Tier 4 backing): Now a formula: 2 lanes × (stretch leading into the junction: floor((L − 8)/5.8) + stretch leading away: floor((L − 5)/5.8)). With L = 65 m: 2 × (9 + 10) = 38. Supersedes the 22 below, which counted only 2 of the 4 stretches and used the EAR 05 stall. FGSV EAR 23 (Empfehlungen für Anlagen des ruhenden Verkehrs, 2023): parallel stall 5.80 m × 2.00 m (EAR 05 had 5.70 m). StVO §12(3) Nr. 1: no parking within 8 m before a junction (5 m with a kerb-separated cycle track) and 5 m after it, measured from where the road edges meet. The 8 m applies because lane 1/8 holds parking, not a cycle track, whenever these spaces exist. [FLAG] driveways are not counted yet (StVO §12(3) Nr. 3 bans parking in front of them); each one costs a space. 2026-10-21 (kerb space in the sim): NEW. Parking spaces on lane 1/8 (outer E-W lane), both sides. [FLAG] estimate: lane 4/5 holds 26 perpendicular stalls per side, about 65 m; the same length fits about 11 parallel stalls per side (EAR 05, about 5.7 m per stall).",
       "priority": "",
       "value_kind": "absolute",
       "unit": "spaces",
       "passive_precision": "decimals",
       "node_formula": {
-        "enabled": false,
-        "expression": ""
+        "enabled": true,
+        "expression": "2*(max(0, floor((extension_segment_length_m-8)/5.8)) + max(0, floor((extension_segment_length_m-5)/5.8)))"
       },
-      "baseline_value": 22,
-      "value": 22,
+      "baseline_value": 38,
+      "value": 38,
       "min": 0,
       "max": 88,
       "active_control": null,
@@ -1790,10 +1792,11 @@
       "type": "passive",
       "status": "defined",
       "influences": [
-        "sidewalk_extension_area"
+        "sidewalk_extension_area",
+        "spaces_1_8"
       ],
       "influenced_by": [],
-      "notes": "2026-10-21 (kerb space in the sim): NEW. Length of the E-W sidewalk extension per side, inside the map. [FLAG] estimate from 26 perpendicular stalls at about 2.5 m on lane 4/5; measure from the plan.",
+      "notes": "2026-10-28 (Tier 4 backing): Meaning changed: kerb length of ONE stretch of lane 1/8, from where the road edges meet at the junction to the map edge. Lane 1/8 has 4 stretches (lane 1 and lane 8, each west and east of the intersection), the same way lane 4/5 counts 26 east + 26 west. Feeds both spaces_1_8 and sidewalk_extension_area. [FLAG] 65 m kept until measured in the game level (engine units); the map image cannot be used, it is a perspective render with no scale bar and the street runs off its edge. Each 5.8 m changes spaces_1_8 by 4. 2026-10-21 (kerb space in the sim): NEW. Length of the E-W sidewalk extension per side, inside the map. [FLAG] estimate from 26 perpendicular stalls at about 2.5 m on lane 4/5; measure from the plan.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "m",
@@ -2021,14 +2024,14 @@
         "sidewalk_extension_spawn_2",
         "extension_segment_length_m"
       ],
-      "notes": "2026-10-21 (kerb space in the sim): NEW. New sidewalk area from the extension on lane 1/8: both sides × length × 2.0 m (width of the parking strip it replaces, RASt 06). 260 m² with the [FLAG] 65 m estimate.",
+      "notes": "2026-10-28 (Tier 4 backing): 4 stretches × L × 2.0 m: 520 m² with L = 65 m (was 2 stretches, 260 m²). The extension runs the full stretch, including the junction clearance zones, which cannot hold parking and are where guidelines place sidewalk extensions (Gehwegvorstreckungen). Width 2.00 m = the EAR 23 parallel stall it replaces. 2026-10-21 (kerb space in the sim): NEW. New sidewalk area from the extension on lane 1/8: both sides × length × 2.0 m (width of the parking strip it replaces, RASt 06). 260 m² with the [FLAG] 65 m estimate.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "m²",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "2*sidewalk_extension_spawn_2*extension_segment_length_m*2.0"
+        "expression": "4*sidewalk_extension_spawn_2*extension_segment_length_m*2.0"
       },
       "baseline_value": 1,
       "value": 1.1,
@@ -8679,10 +8682,10 @@
     },
     "extension_segment_length_m->sidewalk_extension_area": {
       "value": "",
-      "source": "",
-      "notes": "",
-      "status": "assumption",
-      "confidence": "",
+      "source": "FGSV EAR 23 (Empfehlungen für Anlagen des ruhenden Verkehrs, 2023): parallel stall 5.80 m × 2.00 m (EAR 05 had 5.70 m).",
+      "notes": "Full kerb length of each of the 4 stretches × 2.00 m strip.",
+      "status": "empirical",
+      "confidence": "medium",
       "weight": 1,
       "formula": null,
       "color": "",
@@ -9018,6 +9021,18 @@
       "issue_priority": 0,
       "source": "Teschke et al. 2012, AJPH 102:2336 (690 injured cyclists, Toronto and Vancouver; major streets without parked cars OR 0.63, with a bike lane OR 0.54), https://pmc.ncbi.nlm.nih.gov/articles/PMC3519333; dooring share of bike crashes about 15–20 % (Vancouver, Cambridge MA, Chicago), https://dutchreach.org/dooring-problem-prevalence; open door about 1.2 m into the lane.",
       "notes": "Dooring term applies only with a north-south bike lane. Dooring: −5.5 while a north-south bike lane runs next to parking on a/f, less with protection, 0 at full protection or with greenery on a/f. Size: ln(0.63) / ln(0.54) = 0.75, so taking parked cars away is worth about three quarters of a bike lane's safety effect; 0.75 × 7.5 points per protection step ≈ 5.5. The east-west street has no term: there a bike lane never runs next to parking. [FLAG] derived: the 7.5 points per step is the model's own scale.",
+      "status": "empirical",
+      "confidence": "medium"
+    },
+    "extension_segment_length_m->spaces_1_8": {
+      "value": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0,
+      "source": "FGSV EAR 23 (Empfehlungen für Anlagen des ruhenden Verkehrs, 2023): parallel stall 5.80 m × 2.00 m (EAR 05 had 5.70 m). StVO §12(3) Nr. 1: no parking within 8 m before a junction (5 m with a kerb-separated cycle track) and 5 m after it, measured from where the road edges meet.",
+      "notes": "Stalls that fit on the kerb length after the junction clearances, over 4 stretches.",
       "status": "empirical",
       "confidence": "medium"
     }

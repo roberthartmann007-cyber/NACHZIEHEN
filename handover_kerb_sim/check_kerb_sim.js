@@ -47,10 +47,11 @@ const term = v => Math.max(-15, Math.min(8, 6 + 48 * (v('parking_availability') 
 const T0 = term(v0);
 ok(near(T0, 6, 1e-9), 'today the parking term is +6, as before');
 const SC = [
-  ['parking on 1/8 removed (extension)', { [EXT]: 1, [BIKE]: 0, [CS]: 0 }, 158, 171, -5.87],
-  ['parking on 1/8 removed (bike lane)', { [EXT]: 0, [BIKE]: 1, [CS]: 0 }, 158, 171, -5.87],
+  // Tier 4 (2026-10-28): lane 1/8 holds 38 spaces (EAR 23 stalls, StVO clearances, 4 stretches), was 22.
+  ['parking on 1/8 removed (extension)', { [EXT]: 1, [BIKE]: 0, [CS]: 0 }, 142, 171, -10.13],
+  ['parking on 1/8 removed (bike lane)', { [EXT]: 0, [BIKE]: 1, [CS]: 0 }, 142, 171, -10.13],
   ['carsharing: 4/5 emptied', { [EXT]: 0, [BIKE]: 0, [CS]: 1 }, 128, 117, -17.06],
-  ['carsharing + 1/8 removed', { [EXT]: 1, [BIKE]: 0, [CS]: 1 }, 106, 117, -25.63],
+  ['carsharing + 1/8 removed', { [EXT]: 1, [BIKE]: 0, [CS]: 1 }, 90, 117, -31.87],
 ];
 const rows = [];
 for (const [label, ov, spaces, cars, dCA] of SC) {
@@ -66,7 +67,7 @@ ok(['space_activity_index', 'public_space_quality', 'pedestrians_stationary'].ev
 const offS = solve({ [EXT]: 0, urban_furniture: 3 }), onS = solve({ [EXT]: 1, urban_furniture: 3 });
 ok(onS('space_activity_index') > offS('space_activity_index') && onS('public_space_quality') > offS('public_space_quality') && onS('pedestrians_stationary') >= offS('pedestrians_stationary'), 'extension on, with seating: activity, public space quality and lingering go up');
 ok(on('pedestrians_stationary') >= off('pedestrians_stationary'), 'extension on, no seating: lingering room still grows (area term)');
-ok(near(on('sidewalk_extension_area'), 260, 1e-9), 'extension area: 2 × 65 m × 2.0 m = 260 m²');
+ok(near(on('sidewalk_extension_area'), 520, 1e-9), 'extension area: 4 stretches × 65 m × 2.0 m = 520 m² (Tier 4)');
 
 // reference table
 const f = (x, n = 1) => x.toFixed(n).padStart(9);

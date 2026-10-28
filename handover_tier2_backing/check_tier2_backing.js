@@ -34,7 +34,8 @@ ok(opts.length === 6 && opts.every(o => o.effects?.[0]?.node_id === 'bus_stop_de
 
 // today unchanged
 const t0 = run(OLD), t1 = run(M);
-const moved = [...t0.values].filter(([k, v]) => Math.abs(v - t1.values.get(k)) > 1e-3).map(([k]) => k);
+// Tier 4 (2026-10-28) recounted lane 1/8 on purpose (22 → 38 spaces); that input is no longer "unchanged".
+const moved = [...t0.values].filter(([k, v]) => k !== 'spaces_1_8' && Math.abs(v - t1.values.get(k)) > 1e-3).map(([k]) => k);
 ok(!moved.length, 'today: every node unchanged against the file before this change', moved.join(', '));
 const v0 = t1.values, base = cars(v0);
 ok(Math.abs(v0.get('mob_attract_bus') - 30) < 1e-3, 'today: bus attractiveness 30 (3 stops, no lane)');
@@ -42,7 +43,8 @@ ok(Math.abs(v0.get('mob_attract_bus') - 30) < 1e-3, 'today: bus attractiveness 3
 // 7. parking at city scale
 const ext = run(M, { sidewalk_extension_spawn_2: 1 }).values;
 const dExt = pct(cars(ext), base);
-ok(dExt < -2.3 && dExt > -2.7, 'extension on 1/8 (−12 % kerb): about −2.5 % car trips', dExt.toFixed(2) + ' %');
+// Tier 4 (2026-10-28): lane 1/8 holds 38 spaces, so the extension removes 21 % of kerb (was 12 %, −2.5 %).
+ok(dExt < -4.2 && dExt > -4.6, 'extension on 1/8 (−21 % kerb): about −4.4 % car trips', dExt.toFixed(2) + ' %');
 
 // ownership at city scale
 const k0 = JSON.parse(JSON.stringify(M.raw));
@@ -64,7 +66,7 @@ ok(bulbNoExt.v.get('bus_bulb_fit') === 0 && Math.abs(bulbNoExt.v.get('bus_stop_c
 const pen = s => s.v.get('bus_stop_queue_penalty');
 ok(pen(bulb) < pen(kerb) && pen(door) < pen(kerb) && pen(two) === 0, 'each upgrade relieves the stop; two bays clear it',
   `kerbside ${pen(kerb).toFixed(1)}, bulb ${pen(bulb).toFixed(1)}, all-door ${pen(door).toFixed(1)}, two bays ${pen(two).toFixed(1)}`);
-ok(two.v.get('parallel_parking') === 174 && sc({ bus_stop_design: 2, sidewalk_extension_spawn_2: 1 }).v.get('parallel_parking') === 158, 'two-bay stop takes 6 spaces only while 1/8 is parking');
+ok(two.v.get('parallel_parking') === 174 && sc({ bus_stop_design: 2, sidewalk_extension_spawn_2: 1 }).v.get('parallel_parking') === 142, 'two-bay stop takes 6 spaces only while 1/8 is parking');
 const acc = n => run(M, { bus_stops: n }).values.get('bus_stop_access');
 ok(acc(3) - acc(2) < acc(2) - acc(1) && acc(2) - acc(1) < acc(1) - acc(0), 'stop access has diminishing returns', [0, 1, 2, 3].map(acc).map(x => x.toFixed(1)).join(' / '));
 const loops = [kerb, bulb, door, two].map(s => s.r).concat([t1]);

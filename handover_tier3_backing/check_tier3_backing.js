@@ -31,7 +31,8 @@ ok(!('urban_furniture->space_activity_index' in M.p.edge_heuristics) && !('urban
 
 // today unchanged
 const t0 = run(OLD), t1 = run(M);
-const moved = [...t0.values].filter(([k, v]) => Math.abs(v - t1.values.get(k)) > 1e-6).map(([k]) => k);
+// Tier 4 (2026-10-28) recounted lane 1/8 on purpose (22 → 38 spaces); that input is no longer "unchanged".
+const moved = [...t0.values].filter(([k, v]) => k !== 'spaces_1_8' && Math.abs(v - t1.values.get(k)) > 1e-6).map(([k]) => k);
 ok(!moved.length, 'today: every node unchanged against the file before this change', moved.join(', '));
 
 // 10. seating unchanged without extension, at every furniture count
