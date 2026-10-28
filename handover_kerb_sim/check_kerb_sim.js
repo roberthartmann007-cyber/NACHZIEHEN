@@ -1,5 +1,5 @@
 // Check chunk 3: kerb space in the sim (parking supply, carsharing network, room to stay).
-// 2026-10-28: updated for the Tier 1 backing (reference occupancy 0.95, ownership term -3).
+// 2026-10-28: updated for the Tier 1 backing (reference occupancy 0.95) and the Tier 2 backing (parking slope 48, ownership term -60; see handover_tier2_backing).
 // Uses the editor's CES engine (a port of the game's solver), so the numbers are what the game would publish.
 // Read-only: writes nothing.
 // usage: node handover_kerb_sim/check_kerb_sim.js [project.json]
@@ -43,14 +43,14 @@ ok(v0('parallel_parking') === 180 && near(v0('private_cars_parked'), 171) && nea
 ok(near(v0('carsharing_cars'), 6, 1e-9) && near(solve({ [CS]: 1 })('cars_replaced'), 54, 1e-9), 'network: 3 stations × 2 = 6 shared cars, replacing 6 × 9 = 54 private cars (≥ the 52 from lane 4/5)');
 
 // scenarios: change of car attractiveness vs today (everything else fixed so only the parking and ownership terms move)
-const term = v => Math.max(-15, Math.min(8, 12 * (1.5 * v('parking_availability') - 1))) - 3 * v('cars_replaced_share');
+const term = v => Math.max(-15, Math.min(8, 6 + 48 * (v('parking_availability') - 1))) - 60 * v('cars_replaced_share');
 const T0 = term(v0);
-ok(near(T0, 6, 1e-9), 'today the parking term is +6, as with the old parallel_parking/18 curve');
+ok(near(T0, 6, 1e-9), 'today the parking term is +6, as before');
 const SC = [
-  ['parking on 1/8 removed (extension)', { [EXT]: 1, [BIKE]: 0, [CS]: 0 }, 158, 171, -2.2],
-  ['parking on 1/8 removed (bike lane)', { [EXT]: 0, [BIKE]: 1, [CS]: 0 }, 158, 171, -2.2],
-  ['carsharing: 4/5 emptied', { [EXT]: 0, [BIKE]: 0, [CS]: 1 }, 128, 117, -0.24],
-  ['carsharing + 1/8 removed', { [EXT]: 1, [BIKE]: 0, [CS]: 1 }, 106, 117, -3.46],
+  ['parking on 1/8 removed (extension)', { [EXT]: 1, [BIKE]: 0, [CS]: 0 }, 158, 171, -5.87],
+  ['parking on 1/8 removed (bike lane)', { [EXT]: 0, [BIKE]: 1, [CS]: 0 }, 158, 171, -5.87],
+  ['carsharing: 4/5 emptied', { [EXT]: 0, [BIKE]: 0, [CS]: 1 }, 128, 117, -17.06],
+  ['carsharing + 1/8 removed', { [EXT]: 1, [BIKE]: 0, [CS]: 1 }, 106, 117, -25.63],
 ];
 const rows = [];
 for (const [label, ov, spaces, cars, dCA] of SC) {
