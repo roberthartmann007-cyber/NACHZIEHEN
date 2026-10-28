@@ -62,7 +62,10 @@ for (const [label, ov, spaces, cars, dCA] of SC) {
 // room to stay
 const off = solve({ [EXT]: 0 }), on = solve({ [EXT]: 1 });
 ok(['space_activity_index', 'public_space_quality', 'pedestrians_stationary'].every(id => near(off(id), v0(id), 1e-9)), 'extension off: activity, public space quality and lingering unchanged');
-ok(on('space_activity_index') > off('space_activity_index') && on('public_space_quality') > off('public_space_quality') && on('pedestrians_stationary') >= off('pedestrians_stationary'), 'extension on: activity, public space quality and lingering go up');
+// Tier 3 (2026-10-28): the extension's activity term needs seating, so this is checked with half the furniture ceiling in place
+const offS = solve({ [EXT]: 0, urban_furniture: 3 }), onS = solve({ [EXT]: 1, urban_furniture: 3 });
+ok(onS('space_activity_index') > offS('space_activity_index') && onS('public_space_quality') > offS('public_space_quality') && onS('pedestrians_stationary') >= offS('pedestrians_stationary'), 'extension on, with seating: activity, public space quality and lingering go up');
+ok(on('pedestrians_stationary') >= off('pedestrians_stationary'), 'extension on, no seating: lingering room still grows (area term)');
 ok(near(on('sidewalk_extension_area'), 260, 1e-9), 'extension area: 2 × 65 m × 2.0 m = 260 m²');
 
 // reference table

@@ -21,16 +21,18 @@
         "bike_lane_protection",
         "bike_parking",
         "protected_intersection",
-        "total_bike_lanes"
+        "total_bike_lanes",
+        "ns_outer_parking_spawn_4",
+        "bike_lanes_spawn_4"
       ],
-      "notes": "2026-10-21 (kerb space in the sim): parallel_parking is no longer a parent: the dooring penalty (−4.9 at 27 spaces) is gone, because in the game a bike lane never runs next to parked cars. 2026-10-02 (CTS lane-layout study): the lane term is max(10, total_bike_lanes*10), so without a bike lane the attractiveness stays at the one-lane value and only the 0.35 availability gate in mode_util/bike_spawn_count reduces cycling (to about a third); before, every live term was 0 without a lane, the gate multiplied zero and the street lost ALL cyclists. With a lane the value is unchanged. Cycling attractiveness. The availability gate that decides whether cycling COMPETES for trips is not here - it is in mode_util_spawn_2/3/4 and bike_spawn_count_2/3/4, where since 2026-09-05 it is 0.35 + 0.65*min(1, total_bike_lanes/2) rather than min(1, bike_lanes_spawn_N). Two things to know about this formula. First, `base` here is not baseline_value: parallel_parking and bike_parking are parents that the expression does not mention, so the solver hands their edge aggregate in as `base`. Second, speed_limit*18 makes cycling MORE attractive as the speed limit rises, which looks like a sign error; it is left alone because it is the author's call, not ours. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
+      "notes": "2026-10-28 (Tier 3 backing): Dooring is back on the north-south street only: Dooring: −5.5 while a north-south bike lane runs next to parking on a/f, less with protection, 0 at full protection or with greenery on a/f. Size: ln(0.63) / ln(0.54) = 0.75, so taking parked cars away is worth about three quarters of a bike lane's safety effect; 0.75 × 7.5 points per protection step ≈ 5.5. The east-west street has no term: there a bike lane never runs next to parking. [FLAG] derived: the 7.5 points per step is the model's own scale. Supersedes \"the dooring penalty is gone\" below. 2026-10-21 (kerb space in the sim): parallel_parking is no longer a parent: the dooring penalty (−4.9 at 27 spaces) is gone, because in the game a bike lane never runs next to parked cars. 2026-10-02 (CTS lane-layout study): the lane term is max(10, total_bike_lanes*10), so without a bike lane the attractiveness stays at the one-lane value and only the 0.35 availability gate in mode_util/bike_spawn_count reduces cycling (to about a third); before, every live term was 0 without a lane, the gate multiplied zero and the street lost ALL cyclists. With a lane the value is unchanged. Cycling attractiveness. The availability gate that decides whether cycling COMPETES for trips is not here - it is in mode_util_spawn_2/3/4 and bike_spawn_count_2/3/4, where since 2026-09-05 it is 0.35 + 0.65*min(1, total_bike_lanes/2) rather than min(1, bike_lanes_spawn_N). Two things to know about this formula. First, `base` here is not baseline_value: parallel_parking and bike_parking are parents that the expression does not mention, so the solver hands their edge aggregate in as `base`. Second, speed_limit*18 makes cycling MORE attractive as the speed limit rises, which looks like a sign error; it is left alone because it is the author's call, not ours. Availability gate, 2026-09-05 (Docs/model_recommendation_mode_gate.md): availability = base + (1 - base) * min(1, lanes / n_full). Bike base 0.35 / n_full 2, bus base 0.70 / n_full 1, because cycling and bus travel happen in mixed traffic; car and tram keep the binary gate, because no carriageway really does mean no cars and no rails really does mean no trams.",
       "priority": "medium",
       "value_kind": "score",
       "unit": "",
       "passive_precision": "rounded",
       "node_formula": {
         "enabled": true,
-        "expression": "base + min( 42, speed_limit*18*(1 - 0.66*min(1, bike_lane_protection/4))     + bike_lane_protection*7.5     + protected_intersection*3   ) + max(10, total_bike_lanes*10)"
+        "expression": "base + min( 42, speed_limit*18*(1 - 0.66*min(1, bike_lane_protection/4))     + bike_lane_protection*7.5     + protected_intersection*3   ) + max(10, total_bike_lanes*10) - 5.5*ns_outer_parking_spawn_4*min(1, bike_lanes_spawn_4)*(1 - min(1, bike_lane_protection/4))"
       },
       "baseline_value": 0,
       "value": 50,
@@ -569,14 +571,13 @@
       "type": "active",
       "status": "defined",
       "influences": [
-        "space_activity_index",
-        "pedestrians_stationary",
         "plaza_cells_used",
         "plaza_modules_used",
-        "plaza_check_limits"
+        "plaza_check_limits",
+        "urban_furniture_share"
       ],
       "influenced_by": [],
-      "notes": "",
+      "notes": "2026-10-28 (Tier 3 backing): Every seating effect reads urban_furniture_share = this ÷ urban_furniture_max. To change the ceiling: set urban_furniture_max, and this lever's full state and max to match. ",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -834,17 +835,17 @@
       ],
       "influenced_by": [
         "cafe",
-        "urban_furniture",
-        "sidewalk_extension_spawn_2"
+        "sidewalk_extension_spawn_2",
+        "urban_furniture_share"
       ],
-      "notes": "2026-10-21 (kerb space in the sim): Adds 0.05 × sidewalk_extension_spawn_2 inside the curve. [FLAG] size is a judgment. public amenities and destiation increase public space quality and account for one third of the entire index\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating cafe/seating activity curve with assumed weights: cafe 0.45, urban_furniture 0.40, cafe x seating synergy 0.15; saturation rate 2.4 is an assumption.",
+      "notes": "2026-10-28 (Tier 3 backing): Seating reads urban_furniture_share (pieces ÷ urban_furniture_max) instead of urban_furniture/6, so the curve holds when the furniture ceiling changes. The sidewalk extension term needs seating: 0.05 × extension × urban_furniture_share (an empty extension adds nothing). Supersedes the extension note below. 2026-10-21 (kerb space in the sim): Adds 0.05 × sidewalk_extension_spawn_2 inside the curve. [FLAG] size is a judgment. public amenities and destiation increase public space quality and account for one third of the entire index\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating cafe/seating activity curve with assumed weights: cafe 0.45, urban_furniture 0.40, cafe x seating synergy 0.15; saturation rate 2.4 is an assumption.",
       "priority": "",
       "value_kind": "score",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "100*(1 - exp(-2.4*( 0.45*min(1,cafe/2) + 0.40*min(1,urban_furniture/6) + 0.15*min(1,cafe/2)*min(1,urban_furniture/6) + 0.05*sidewalk_extension_spawn_2 )))"
+        "expression": "100*(1 - exp(-2.4*( 0.45*min(1,cafe/2) + 0.40*urban_furniture_share + 0.15*min(1,cafe/2)*urban_furniture_share + 0.05*sidewalk_extension_spawn_2*urban_furniture_share )))"
       },
       "baseline_value": 0,
       "value": 50,
@@ -963,18 +964,18 @@
       "influences": [],
       "influenced_by": [
         "public_space_quality",
-        "urban_furniture",
         "rain",
-        "sidewalk_extension_area"
+        "sidewalk_extension_area",
+        "urban_furniture_share"
       ],
-      "notes": "2026-10-21 (kerb space in the sim): The lingering ceiling is 770 + 0.40 × sidewalk_extension_area / 5.5 (about +19 people for 260 m²). Idling pedestrians — max 770 at a peak moment (ideal scenario)\nCounted across 4,235 m² of idle-eligible area (30% of the 3,650 m² sidewalk + 40% of reclaimed roadway in the post-redesign state). Build-up: café terraces (340), signal-wait queues at five crossings (150), induced plaza idlers (150), sidewalk lingerers (70), tram M8 + bus 142 stop waiters (60). Resulting density ~5.5 m²/person — Fruin LOS A, comfortable lingering. Festival ceiling sits separately at ~1,100+ under managed-event density (2 ped/m²).\n\n\n Fruin, Pedestrian Planning and Design (1971) · NCHRP Report 616 — Multimodal LOS · Barcelona superblock evaluation (BCNecologia) · Copenhagen Strøget pedestrianisation (Gehl Architects) · BVG line network & ridership data\n\n[2026-07-05] Curve redesign: linear PSQ mapping replaced by logistic S-curve: 770/(1+exp(-(public_space_quality-55)/12)). This keeps low-quality places from producing many lingerers while saturating near the observed peak-moment ceiling.",
+      "notes": "2026-10-28 (Tier 3 backing): Seating gate reads urban_furniture_share instead of urban_furniture/6. 2026-10-21 (kerb space in the sim): The lingering ceiling is 770 + 0.40 × sidewalk_extension_area / 5.5 (about +19 people for 260 m²). Idling pedestrians — max 770 at a peak moment (ideal scenario)\nCounted across 4,235 m² of idle-eligible area (30% of the 3,650 m² sidewalk + 40% of reclaimed roadway in the post-redesign state). Build-up: café terraces (340), signal-wait queues at five crossings (150), induced plaza idlers (150), sidewalk lingerers (70), tram M8 + bus 142 stop waiters (60). Resulting density ~5.5 m²/person — Fruin LOS A, comfortable lingering. Festival ceiling sits separately at ~1,100+ under managed-event density (2 ped/m²).\n\n\n Fruin, Pedestrian Planning and Design (1971) · NCHRP Report 616 — Multimodal LOS · Barcelona superblock evaluation (BCNecologia) · Copenhagen Strøget pedestrianisation (Gehl Architects) · BVG line network & ridership data\n\n[2026-07-05] Curve redesign: linear PSQ mapping replaced by logistic S-curve: 770/(1+exp(-(public_space_quality-55)/12)). This keeps low-quality places from producing many lingerers while saturating near the observed peak-moment ceiling.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
       "passive_precision": "rounded",
       "node_formula": {
         "enabled": true,
-        "expression": "(770 + 0.40*sidewalk_extension_area/5.5)/(1+exp(-(public_space_quality-55)/12)) * min(1, 0.3 + 0.7*min(1, urban_furniture/6)) * (1 - 0.50*rain)"
+        "expression": "(770 + 0.40*sidewalk_extension_area/5.5)/(1+exp(-(public_space_quality-55)/12)) * min(1, 0.3 + 0.7*urban_furniture_share) * (1 - 0.50*rain)"
       },
       "baseline_value": 50,
       "value": 770,
@@ -1734,7 +1735,7 @@
         "carsharing_cars"
       ],
       "influenced_by": [],
-      "notes": "2026-10-21 (kerb space in the sim): NEW. Stations the carsharing network places across the map once carsharing is built at SP 4. Sized to absorb the 52 cars from lane 4/5: 52 / 9 = 5.8, so 6 shared cars, at 2 per station 3 stations. [FLAG] game rule: the sizing rule. Station size (2 cars) is backed by bcs 2024, see cars_per_carsharing_station. The stations sit in pocket modules, not in the 180 spaces.",
+      "notes": "2026-10-28 (Tier 3 backing): Kept as a game decision (design team): the stations stay in the pocket modules and take none of the parking spaces. In real cities on-street stations usually take public parking spaces (Bremen mobil.punkt, Berlin Jelbi); the game sets that aside on purpose. 2026-10-21 (kerb space in the sim): NEW. Stations the carsharing network places across the map once carsharing is built at SP 4. Sized to absorb the 52 cars from lane 4/5: 52 / 9 = 5.8, so 6 shared cars, at 2 per station 3 stations. [FLAG] game rule: the sizing rule. Station size (2 cars) is backed by bcs 2024, see cars_per_carsharing_station. The stations sit in pocket modules, not in the 180 spaces.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "stations",
@@ -2508,7 +2509,7 @@
         "bus_stop_parking_loss"
       ],
       "influenced_by": [],
-      "notes": "2026-10-21 (kerb space in the sim): Now has effects: parking spaces (−22), lingering capacity (sidewalk_extension_area) and a small activity term (space_activity_index). 2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
+      "notes": "2026-10-28 (Tier 3 backing): Its activity effect now needs seating (see space_activity_index). 2026-10-21 (kerb space in the sim): Now has effects: parking spaces (−22), lingering capacity (sidewalk_extension_area) and a small activity term (space_activity_index). 2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -2537,10 +2538,11 @@
       "type": "active",
       "status": "defined",
       "influences": [
-        "car_lanes_spawn_4_fit"
+        "car_lanes_spawn_4_fit",
+        "mob_attract_bikes"
       ],
       "influenced_by": [],
-      "notes": "2026-10-28 (Tier 2 backing): Lane cap backed: HCM 2000 uses 2,000 bikes/h for a bike lane at a signal (https://swov.nl/en/publicatie/saturation-flow-rate-start-lost-time-and-capacity-bicycles-signalized-intersections); a lane as wide as a car lane holds about two, so about 4,000/h during green and about 2,000/h over the whole signal cycle at 50 % green. Dutch counts are higher (3,000–3,500/h per 0.78 m strip, Yuan et al. TRR 2019). Model peak: about 1,850 cyclists/h per direction, so one lane holds it. [FLAG] derived: the 50 % green share; at the HCM value the lane runs at about 93 %. Supersedes \"about 4,000 bikes/h at a signal\" below. 2026-10-20 (N-S lane slots): the north-south street (set at SP 4) has 3 lane slots per direction, mirrored: a/f outer, b/e, c/d (see lane_slots in the project file). a/f holds parking or greenery, which have no effect in the sim. b/e and c/d always hold a lane: car, bike or bus, so car + bike + bus = 2. Default: car lanes on b/e and c/d. A bike lane fits on b/e or c/d and takes a car slot. Capped at 1 per direction: one lane as wide as a car lane carries about 4,000 bikes/h at a signal, so a second adds no capacity. 2026-10-20 (N-S axis decided at SP 3): at SP 3 (where spawn point 4 used to be) players set the whole north-south cross-section, for both spawn 4 (demand at 4*) and spawn 5 (demand at 5*). Demand and spawn points are unchanged. This lever now sets both north-south directions: spawn 4 and spawn 5 read it. Still one lane per direction.",
+      "notes": "2026-10-28 (Tier 2 backing): Lane cap backed: HCM 2000 uses 2,000 bikes/h for a bike lane at a signal (https://swov.nl/en/publicatie/saturation-flow-rate-start-lost-time-and-capacity-bicycles-signalized-intersections); a lane as wide as a car lane holds about two, so about 4,000/h during green and about 2,000/h over the whole signal cycle at 50 % green. Dutch counts are higher (3,000–3,500/h per 0.78 m strip, Yuan et al. TRR 2019). Model peak: about 1,850 cyclists/h per direction, so one lane holds it. [FLAG] derived: the 50 % green share; at the HCM value the lane runs at about 93 %. Supersedes \"about 4,000 bikes/h at a signal\" below. 2026-10-20 (N-S lane slots): the north-south street (set at SP 4) has 3 lane slots per direction, mirrored: a/f outer, b/e, c/d (see lane_slots in the project file). a/f holds parking or greenery, which have no effect in the sim. b/e and c/d always hold a lane: car, bike or bus, so car + bike + bus = 2. Default: car lanes on b/e and c/d. A bike lane fits on b/e or c/d and takes a car slot. Capped at 1 per direction: one lane as wide as a car lane carries about 4,000 bikes/h at a signal, so a second adds no capacity. 2026-10-20 (N-S axis decided at SP 3): at SP 3 (where spawn point 4 used to be) players set the whole north-south cross-section, for both spawn 4 (demand at 4*) and spawn 5 (demand at 5*). Demand and spawn points are unchanged. This lever now sets both north-south directions: spawn 4 and spawn 5 read it. Still one lane per direction. 2026-10-28 (Tier 3 backing): Next to parking on a/f a bike lane pays the dooring term in mob_attract_bikes (ns_outer_parking_spawn_4).",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -4548,16 +4550,17 @@
         "playground",
         "plaza_cells_used",
         "plaza_modules_used",
-        "plaza_upkeep_used"
+        "plaza_upkeep_used",
+        "urban_furniture_max"
       ],
-      "notes": "How many of the four limits are exceeded: cells, modules, upkeep, per-type maxima. Source: output/placement_limits.json limits and types.max_count. Added 2026-10-06 by analysis/build_curved_persona_nodes.py.",
+      "notes": "2026-10-28 (Tier 3 backing): Furniture limit reads urban_furniture_max instead of a fixed 6. How many of the four limits are exceeded: cells, modules, upkeep, per-type maxima. Source: output/placement_limits.json limits and types.max_count. Added 2026-10-06 by analysis/build_curved_persona_nodes.py.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "(plaza_cells_used > 12 ? 1 : 0) + (plaza_modules_used > 8 ? 1 : 0) + (plaza_upkeep_used > 5 ? 1 : 0) + ((urban_furniture > 6) + (cafe > 2) + (grass > 4) + (blue_infrastructure > 1) + (green_facades > 2) + (playground > 1) > 0 ? 1 : 0)"
+        "expression": "(plaza_cells_used > 12 ? 1 : 0) + (plaza_modules_used > 8 ? 1 : 0) + (plaza_upkeep_used > 5 ? 1 : 0) + ((urban_furniture > urban_furniture_max) + (cafe > 2) + (grass > 4) + (blue_infrastructure > 1) + (green_facades > 2) + (playground > 1) > 0 ? 1 : 0)"
       },
       "baseline_value": 0,
       "value": 0,
@@ -4883,6 +4886,98 @@
       "evidence_status": "",
       "_x": 2590,
       "_y": 210
+    },
+    {
+      "id": "urban_furniture_max",
+      "label": "urban_furniture_max",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "urban_furniture_share",
+        "plaza_check_limits"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-28 (Tier 3 backing): NEW. Furniture pieces the plaza can hold: the spawn ceiling for urban_furniture (6 today). Every seating effect reads urban_furniture_share, so changing this one number rescales them all: the full ceiling always gives the full effect. When it changes, also set the urban_furniture lever's \"full\" state (active_states.b) and its max to the same number.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "pieces",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": false,
+        "expression": ""
+      },
+      "baseline_value": 6,
+      "value": 6,
+      "min": 1,
+      "max": 50,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 6920,
+      "_y": 330
+    },
+    {
+      "id": "urban_furniture_share",
+      "label": "urban_furniture_share",
+      "type": "passive",
+      "status": "defined",
+      "influences": [
+        "space_activity_index",
+        "pedestrians_stationary"
+      ],
+      "influenced_by": [
+        "urban_furniture",
+        "urban_furniture_max"
+      ],
+      "notes": "2026-10-28 (Tier 3 backing): NEW. Share of the furniture ceiling in place, 0–1: urban_furniture / urban_furniture_max. Read by every seating effect instead of a fixed /6.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "share",
+      "passive_precision": "decimals",
+      "node_formula": {
+        "enabled": true,
+        "expression": "min(1, urban_furniture/max(1, urban_furniture_max))"
+      },
+      "baseline_value": 0,
+      "value": 0,
+      "min": 0,
+      "max": 1,
+      "active_control": null,
+      "active_order": null,
+      "active_states": null,
+      "evidence_status": "",
+      "_x": 6920,
+      "_y": 690
+    },
+    {
+      "id": "ns_outer_parking_spawn_4",
+      "label": "ns_outer_parking_spawn_4",
+      "type": "active",
+      "status": "defined",
+      "influences": [
+        "mob_attract_bikes"
+      ],
+      "influenced_by": [],
+      "notes": "2026-10-28 (Tier 3 backing): NEW. 1 = the outer lane a/f of the north-south street holds parking (starting state), 0 = greenery with pockets. Set by the two a/f options at SP 4. A bike lane on b/e runs right next to a/f, so parking there puts riders in the door zone. [FLAG] open: a/f parking spaces are not yet taken out of parallel_parking when it turns to greenery; that needs the a/f space count.",
+      "priority": "",
+      "value_kind": "absolute",
+      "unit": "",
+      "passive_precision": "decimals",
+      "node_formula": null,
+      "baseline_value": 1,
+      "value": 1,
+      "min": 0,
+      "max": 1,
+      "active_control": "slider",
+      "active_order": 48,
+      "active_states": {
+        "a": 0,
+        "b": 1
+      },
+      "evidence_status": "",
+      "_x": -470,
+      "_y": -570
     }
   ],
   "edge_heuristics": {
@@ -5125,23 +5220,6 @@
       "value": "",
       "source": "Whyte 1980; Gehl 2011; Mehta 2014.",
       "notes": "NORMALIZED: max_available_units=1 | max_node_impact=40 pts | slope = max_node_impact / max_available_units = 40 / 1 = 40. Node is binary (active_states {0,1}). If spawn config later allows multiple café placements, update max_available_units and recalculate slope (e.g. 3 cafés → slope = 40/3 ≈ 13.333). A single outdoor café terrace is the dominant single-object space activator (Gehl). SAI budget: café 40 + urban_furniture 30 = 70 pts max; 30 pts intentionally unreachable, representing unmodeled amenity types.\n\n[2026-07-05] Curve redesign: live space_activity_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.4*(0.45*min(1,cafe/100)+0.40*min(1,urban_furniture/6)+0.15*min(1,cafe/100)*min(1,urban_furniture/6)))). Weights, saturation rate, and cafe x seating synergy are assumptions grounded in public-life literature, not hard empirical coefficients.",
-      "status": "assumption",
-      "confidence": "medium",
-      "weight": 1,
-      "formula": {
-        "type": "normalized_linear",
-        "max_node_impact": 50,
-        "intercept": 0,
-        "label": "Inert provenance edge; live SAI node_formula applies assumed cafe/seating saturation and synergy"
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 120
-    },
-    "urban_furniture->space_activity_index": {
-      "value": "",
-      "source": "Whyte 1980; Gehl 2011; Mehta 2014.",
-      "notes": "NORMALIZED: max_available_units=6 | max_node_impact=30 pts | slope = max_node_impact / max_available_units = 30 / 6 = 5. To change the spawn ceiling, update max_available_units and recalculate slope accordingly (e.g. 4 pieces → slope = 30/4 = 7.5). SAI budget share: 30 of 70 reachable pts.\n\n[2026-07-05] Curve redesign: live space_activity_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.4*(0.45*min(1,cafe/100)+0.40*min(1,urban_furniture/6)+0.15*min(1,cafe/100)*min(1,urban_furniture/6)))). Weights, saturation rate, and cafe x seating synergy are assumptions grounded in public-life literature, not hard empirical coefficients.",
       "status": "assumption",
       "confidence": "medium",
       "weight": 1,
@@ -6483,21 +6561,6 @@
       "formula": {
         "type": "multiplier",
         "label": "Inert provenance; live pedestrians_stationary node_formula applies -50% rain factor"
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 90
-    },
-    "urban_furniture->pedestrians_stationary": {
-      "value": "",
-      "source": "Gehl 2011",
-      "notes": "Lingering requires places to sit (Gehl). Reuses /6 seating reference.",
-      "status": "hypothesis",
-      "confidence": "medium",
-      "weight": 1,
-      "formula": {
-        "type": "multiplier",
-        "label": "Inert provenance; live pedestrians_stationary node_formula applies seating gate min(1,0.3+0.7*min(1,urban_furniture/6))"
       },
       "color": "",
       "issue_status": "unresolved",
@@ -8640,9 +8703,9 @@
     },
     "sidewalk_extension_spawn_2->space_activity_index": {
       "value": "",
-      "source": "SF Parklet Impact Study 2011 (stationary activity up at all 3 sites); Mehta 2013, The Street.",
-      "notes": "[FLAG] weight 0.05: an extension alone adds about 11 activity points (a third of a café); next to full cafés and furniture about 1 point, so no double counting.",
-      "status": "hypothesis",
+      "source": "SF Great Streets Parklet Impact Study (parklets with seating: people stopping and sitting +30 %, https://sf.streetsblog.org/2012/01/05/great-streets-project-quantifies-the-impacts-of-parklets); Whyte 1980 (people sit where there are places to sit); Gehl 2011; Mehta 2007 and 2013 (seating is the strongest street-front driver of lingering).",
+      "notes": "2026-10-28 (Tier 3 backing): The extension adds activity only together with seating: 0.05 × extension × urban_furniture_share. An empty extension adds 0 (was +11.3); 1 café + half the furniture +1.9 (was +3.7); full furniture +1.0 (unchanged). The studies measured extensions that came with seating. [FLAG] the size 0.05 is still a judgment; the direction and the seating gate are backed. [FLAG] weight 0.05: an extension alone adds about 11 activity points (a third of a café); next to full cafés and furniture about 1 point, so no double counting.",
+      "status": "empirical",
       "confidence": "medium",
       "weight": 1,
       "formula": null,
@@ -8865,6 +8928,98 @@
       "color": "",
       "issue_status": "none",
       "issue_priority": 0
+    },
+    "urban_furniture_share->space_activity_index": {
+      "value": "",
+      "source": "Whyte 1980; Gehl 2011; Mehta 2014.",
+      "notes": "2026-10-28 (Tier 3 backing): Moved from urban_furniture: the formula now reads the share of the ceiling instead of urban_furniture/6. NORMALIZED: max_available_units=6 | max_node_impact=30 pts | slope = max_node_impact / max_available_units = 30 / 6 = 5. To change the spawn ceiling, update max_available_units and recalculate slope accordingly (e.g. 4 pieces → slope = 30/4 = 7.5). SAI budget share: 30 of 70 reachable pts.\n\n[2026-07-05] Curve redesign: live space_activity_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.4*(0.45*min(1,cafe/100)+0.40*min(1,urban_furniture/6)+0.15*min(1,cafe/100)*min(1,urban_furniture/6)))). Weights, saturation rate, and cafe x seating synergy are assumptions grounded in public-life literature, not hard empirical coefficients.",
+      "status": "assumption",
+      "confidence": "medium",
+      "weight": 1,
+      "formula": {
+        "type": "normalized_linear",
+        "max_node_impact": 50,
+        "intercept": 0,
+        "label": "Inert provenance edge; live SAI node_formula applies assumed cafe/seating saturation and synergy"
+      },
+      "color": "",
+      "issue_status": "unresolved",
+      "issue_priority": 120
+    },
+    "urban_furniture_share->pedestrians_stationary": {
+      "value": "",
+      "source": "Gehl 2011",
+      "notes": "2026-10-28 (Tier 3 backing): Moved from urban_furniture: the formula now reads the share of the ceiling instead of urban_furniture/6. Lingering requires places to sit (Gehl). Reuses /6 seating reference.",
+      "status": "hypothesis",
+      "confidence": "medium",
+      "weight": 1,
+      "formula": {
+        "type": "multiplier",
+        "label": "Inert provenance; live pedestrians_stationary node_formula applies seating gate min(1,0.3+0.7*min(1,urban_furniture/6))"
+      },
+      "color": "",
+      "issue_status": "unresolved",
+      "issue_priority": 90
+    },
+    "urban_furniture->urban_furniture_share": {
+      "value": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0,
+      "source": "",
+      "notes": "Pieces in place.",
+      "status": "assumption",
+      "confidence": ""
+    },
+    "urban_furniture_max->urban_furniture_share": {
+      "value": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0,
+      "source": "",
+      "notes": "Ceiling the share is measured against.",
+      "status": "assumption",
+      "confidence": ""
+    },
+    "urban_furniture_max->plaza_check_limits": {
+      "value": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0,
+      "source": "",
+      "notes": "The furniture limit is the ceiling, not a fixed 6.",
+      "status": "assumption",
+      "confidence": ""
+    },
+    "ns_outer_parking_spawn_4->mob_attract_bikes": {
+      "value": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0,
+      "source": "Teschke et al. 2012, AJPH 102:2336 (690 injured cyclists, Toronto and Vancouver; major streets without parked cars OR 0.63, with a bike lane OR 0.54), https://pmc.ncbi.nlm.nih.gov/articles/PMC3519333; dooring share of bike crashes about 15–20 % (Vancouver, Cambridge MA, Chicago), https://dutchreach.org/dooring-problem-prevalence; open door about 1.2 m into the lane.",
+      "notes": "Dooring: −5.5 while a north-south bike lane runs next to parking on a/f, less with protection, 0 at full protection or with greenery on a/f. Size: ln(0.63) / ln(0.54) = 0.75, so taking parked cars away is worth about three quarters of a bike lane's safety effect; 0.75 × 7.5 points per protection step ≈ 5.5. The east-west street has no term: there a bike lane never runs next to parking. [FLAG] derived: the 7.5 points per step is the model's own scale.",
+      "status": "empirical",
+      "confidence": "medium"
+    },
+    "bike_lanes_spawn_4->mob_attract_bikes": {
+      "value": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0,
+      "source": "Teschke et al. 2012, AJPH 102:2336 (690 injured cyclists, Toronto and Vancouver; major streets without parked cars OR 0.63, with a bike lane OR 0.54), https://pmc.ncbi.nlm.nih.gov/articles/PMC3519333; dooring share of bike crashes about 15–20 % (Vancouver, Cambridge MA, Chicago), https://dutchreach.org/dooring-problem-prevalence; open door about 1.2 m into the lane.",
+      "notes": "Dooring term applies only with a north-south bike lane. Dooring: −5.5 while a north-south bike lane runs next to parking on a/f, less with protection, 0 at full protection or with greenery on a/f. Size: ln(0.63) / ln(0.54) = 0.75, so taking parked cars away is worth about three quarters of a bike lane's safety effect; 0.75 × 7.5 points per protection step ≈ 5.5. The east-west street has no term: there a bike lane never runs next to parking. [FLAG] derived: the 7.5 points per step is the model's own scale.",
+      "status": "empirical",
+      "confidence": "medium"
     }
   },
   "system_rules": [
@@ -8936,7 +9091,7 @@
           }
         }
       ],
-      "notes": "Each lever value is a number of lanes per direction. A layout is buildable when every lane can be given its own slot that fits it. The sidewalk extension fits only on 1/8; parking and sport terrain fill a slot but have no effect in the sim, so they are not listed. A bike lane goes on 1/8, or on 2/7 when 1/8 holds the extension. yields: choosing the extension is never blocked; if the bike lane cannot move to 2/7, the extension replaces it. requires: slot 4/5 can be used only while carsharing >= 1 (a carsharing station at SP 4); until then it stays parking.",
+      "notes": "Each lever value is a number of lanes per direction. A layout is buildable when every lane can be given its own slot that fits it. The sidewalk extension fits only on 1/8; parking and sport terrain fill a slot but have no effect in the sim, so they are not listed. A bike lane goes on 1/8, or on 2/7 when 1/8 holds the extension. yields: choosing the extension is never blocked; if the bike lane cannot move to 2/7, the extension replaces it. requires: slot 4/5 can be used only while carsharing >= 1 (a carsharing station at SP 4); until then it stays parking. Game decision (2026-10-28, design team): the extension keeps priority over the bike lane even where a car lane could give way instead. Kept on purpose.",
       "yields": {
         "extension": [
           "bike"
@@ -8973,7 +9128,7 @@
       ],
       "filled": true,
       "fill_with": "car",
-      "notes": "Each lever value is a number of lanes per direction. A layout is buildable when every lane can be given its own slot that fits it. filled: every slot always holds a lane, so car + bike + bus = 2; fill_with: a slot that a bike or bus lane gives up goes back to a car lane, and a bike or bus lane takes its slot from a car lane. The outer lane a/f (parking or greenery with pockets) has no effect in the sim, so it is not listed."
+      "notes": "Each lever value is a number of lanes per direction. A layout is buildable when every lane can be given its own slot that fits it. filled: every slot always holds a lane, so car + bike + bus = 2; fill_with: a slot that a bike or bus lane gives up goes back to a car lane, and a bike or bus lane takes its slot from a car lane. The outer lane a/f (parking or greenery with pockets) is not a slot: it sets ns_outer_parking_spawn_4, which drives dooring for a bike lane on b/e."
     }
   ],
   "spawn": {
@@ -9238,7 +9393,7 @@
           "id_344",
           "id_349"
         ],
-        "node_id": "",
+        "node_id": "ns_outer_parking_spawn_4",
         "max_quantity": 1
       },
       "id_345": {
@@ -9682,7 +9837,15 @@
         "id": "id_344",
         "label": "greenery_with_pockets",
         "unlockedElemId": "id_345",
-        "elemId": "id_343"
+        "elemId": "id_343",
+        "node_id": "ns_outer_parking_spawn_4",
+        "effects": [
+          {
+            "node_id": "ns_outer_parking_spawn_4",
+            "op": "set",
+            "value": 0
+          }
+        ]
       },
       "id_347": {
         "id": "id_347",
@@ -9700,7 +9863,15 @@
         "id": "id_349",
         "label": "parking",
         "unlockedElemId": null,
-        "elemId": "id_343"
+        "elemId": "id_343",
+        "node_id": "ns_outer_parking_spawn_4",
+        "effects": [
+          {
+            "node_id": "ns_outer_parking_spawn_4",
+            "op": "set",
+            "value": 1
+          }
+        ]
       },
       "id_352": {
         "id": "id_352",
