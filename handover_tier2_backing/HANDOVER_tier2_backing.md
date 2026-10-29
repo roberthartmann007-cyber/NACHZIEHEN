@@ -77,3 +77,5 @@ git show 4f8fb53:update.json > archive/update_before-tier2-backing.json
 - **Bus lane on 3/6:** a bulb only touches a bus lane on 2/7. The model doesn't check which slot the bus lane is in.
 - **Bike lane on 1/8:** a kerbside stop with a bike lane on 1/8 makes the bus cross the bike lane. That conflict is not modelled.
 - **Ownership term:** −60 is a large lever. If the design team wants carsharing weaker, the defensible floor is the low end already used. The other choice is to drop "replaced cars are average cars" with a source showing they are driven less.
+
+2026-10-29: the bus-stop part (designs, all-door boarding, stop capacity and queue penalty) is replaced by one simple stop, see `handover_bus_stop_simple/HANDOVER_bus_stop_simple.md`.
