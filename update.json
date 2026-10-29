@@ -127,7 +127,7 @@
     },
     {
       "id": "greenery",
-      "label": "part of the intersection covered by trees",
+      "label": "part of the intersection covered by trees (% of 11,500 m²)",
       "type": "passive",
       "status": "defined",
       "influences": [
@@ -136,21 +136,22 @@
       ],
       "influenced_by": [
         "middle_part_covered_trees",
-        "spawn_2_canopy_streets"
+        "spawn_2_canopy_streets",
+        "sidewalk_extension_spawn_2"
       ],
-      "notes": "2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. East-west street trees now come only from spawn_2_canopy_streets, whose link weight went from 9 to 18 (the old 9 + 9); spawn_3_canopy_street was removed. Every percentage of canopy covering  the streetscape leads to a reduction 0.29°C",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Now measured as % canopy cover of the whole map (reference area 11,500 m²), from the planted areas in the new game set-up. Green boulevard on the middle lane: 1,790 m² = 15.57 %. Canopy alley on the sidewalk extension: 2,700 m² = 23.48 %, 1,350 m² = 11.74 % per side (spawn_2_canopy_streets 0–2). Maximum 39.04 % (was 49 %: 13 % middle + 2 × 18 % streets, which on this map would have meant 1,495 m² + 4,140 m², more than the 2,700 m² the extension actually covers). The node formula multiplies the alley by sidewalk_extension_spawn_2 because the trees stand on the extension; the game spawn tree already unlocks spawn_2_canopy_streets only after the sidewalk extension (option id_10 unlocks id_336), so the formula just keeps the editor in step with the game. [FLAG] assumes canopy area = planted area at maturity; crowns that overhang the road would raise it. Unit was \"amount of trees\", but the value has always been used as a percentage. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. East-west street trees now come only from spawn_2_canopy_streets, whose link weight went from 9 to 18 (the old 9 + 9); spawn_3_canopy_street was removed. Every percentage of canopy covering  the streetscape leads to a reduction 0.29°C",
       "priority": "medium",
       "value_kind": "absolute",
-      "unit": "amount of trees",
+      "unit": "% canopy cover",
       "passive_precision": "decimals",
       "node_formula": {
-        "enabled": false,
-        "expression": ""
+        "enabled": true,
+        "expression": "100*(1790*middle_part_covered_trees + 1350*spawn_2_canopy_streets*sidewalk_extension_spawn_2)/11500"
       },
       "baseline_value": 0,
       "value": 20,
       "min": 0,
-      "max": 100,
+      "max": 40,
       "active_control": null,
       "active_order": null,
       "active_states": null,
@@ -241,7 +242,7 @@
         "green_facades",
         "extreme_summer_heat"
       ],
-      "notes": "",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Greenery is no longer counted twice. The link greenery → temperature (−0.29 °C per % canopy) went into base, and this formula then subtracted greenery again, so full greenery took a 19 °C day to 2.2 °C and a 45 °C day to 24.4 °C. That link now has slope 0; greenery cools only through this formula: cooling = min(10, max(3, 3 + 0.28·(base − 15))) · (1 − exp(−greenery/25)). At 39 % canopy: 19 → 15.7 °C, 45 → 37.1 °C; with both green facades and both water features, 45 → 32.9 °C. The old design target \"extreme heat 45 → 28 °C when all three are maxed\" rested on an unsourced −6 °C for water; with water set to what field and model studies show (see blue_infrastructure → temperature), the best heat-day result is about 33 °C. Average cooling is 0.20 °C per % on a heat day and 0.08 °C per % on a normal day, below the city-scale 0.29 °C per % (EC 2023), as expected for one junction among heat-storing buildings.",
       "priority": "medium",
       "value_kind": "absolute",
       "unit": "°C",
@@ -481,14 +482,14 @@
         "blue_infrastructure",
         "green_facades"
       ],
-      "notes": "[2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Canopy term now saturates at greenery/39.04, the new maximum canopy share, so full planting still fills the canopy half of the index (was /49). [2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
       "priority": "",
       "value_kind": "score",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "100*(1 - exp(-2.3*( 0.50*min(1,greenery/49) + 0.20*min(1,grass/4) + 0.15*min(1,blue_infrastructure/2) + 0.15*min(1,green_facades/2) )))"
+        "expression": "100*(1 - exp(-2.3*( 0.50*min(1,greenery/39.04) + 0.20*min(1,grass/4) + 0.15*min(1,blue_infrastructure/2) + 0.15*min(1,green_facades/2) )))"
       },
       "baseline_value": 0,
       "value": 0,
@@ -736,7 +737,7 @@
         "plaza_check_limits"
       ],
       "influenced_by": [],
-      "notes": "",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Plaza water feature, 0–2 units. Cools the junction by −0.1 °C each (−0.2 °C for both), from the evidence for small still water; its larger value is in the visual greenery index and public space quality, not in cooling. See blue_infrastructure → temperature.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -1792,11 +1793,10 @@
       "type": "passive",
       "status": "defined",
       "influences": [
-        "sidewalk_extension_area",
         "spaces_1_8"
       ],
       "influenced_by": [],
-      "notes": "2026-10-28 (Tier 4 backing): Meaning changed: kerb length of ONE stretch of lane 1/8, from where the road edges meet at the junction to the map edge. Lane 1/8 has 4 stretches (lane 1 and lane 8, each west and east of the intersection), the same way lane 4/5 counts 26 east + 26 west. Feeds both spaces_1_8 and sidewalk_extension_area. [FLAG] 65 m kept until measured in the game level (engine units); the map image cannot be used, it is a perspective render with no scale bar and the street runs off its edge. Each 5.8 m changes spaces_1_8 by 4. 2026-10-21 (kerb space in the sim): NEW. Length of the E-W sidewalk extension per side, inside the map. [FLAG] estimate from 26 perpendicular stalls at about 2.5 m on lane 4/5; measure from the plan.",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): No longer feeds sidewalk_extension_area, which is now a fixed 2,700 m². Still sets spaces_1_8. 2026-10-28 (Tier 4 backing): Meaning changed: kerb length of ONE stretch of lane 1/8, from where the road edges meet at the junction to the map edge. Lane 1/8 has 4 stretches (lane 1 and lane 8, each west and east of the intersection), the same way lane 4/5 counts 26 east + 26 west. Feeds both spaces_1_8 and sidewalk_extension_area. [FLAG] 65 m kept until measured in the game level (engine units); the map image cannot be used, it is a perspective render with no scale bar and the street runs off its edge. Each 5.8 m changes spaces_1_8 by 4. 2026-10-21 (kerb space in the sim): NEW. Length of the E-W sidewalk extension per side, inside the map. [FLAG] estimate from 26 perpendicular stalls at about 2.5 m on lane 4/5; measure from the plan.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "m",
@@ -2021,22 +2021,21 @@
         "pedestrians_stationary"
       ],
       "influenced_by": [
-        "sidewalk_extension_spawn_2",
-        "extension_segment_length_m"
+        "sidewalk_extension_spawn_2"
       ],
-      "notes": "2026-10-28 (Tier 4 backing): 4 stretches × L × 2.0 m: 520 m² with L = 65 m (was 2 stretches, 260 m²). The extension runs the full stretch, including the junction clearance zones, which cannot hold parking and are where guidelines place sidewalk extensions (Gehwegvorstreckungen). Width 2.00 m = the EAR 23 parallel stall it replaces. 2026-10-21 (kerb space in the sim): NEW. New sidewalk area from the extension on lane 1/8: both sides × length × 2.0 m (width of the parking strip it replaces, RASt 06). 260 m² with the [FLAG] 65 m estimate.",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Fixed at 2,700 m² from the new game set-up (was 4 × 65 m × 2.0 m = 520 m², capped at 2,000). 2,700 m² cannot come from the 2 m parking strip: over 4 × 65 m it would need 10.4 m width, so the extension covers more than lane 1/8 and the area is now a set value, not derived from extension_segment_length_m. Lingering ceiling in pedestrians_stationary: +0.40 × 2,700 / 5.5 ≈ +196 people (was +38). 2026-10-28 (Tier 4 backing): 4 stretches × L × 2.0 m: 520 m² with L = 65 m (was 2 stretches, 260 m²). The extension runs the full stretch, including the junction clearance zones, which cannot hold parking and are where guidelines place sidewalk extensions (Gehwegvorstreckungen). Width 2.00 m = the EAR 23 parallel stall it replaces. 2026-10-21 (kerb space in the sim): NEW. New sidewalk area from the extension on lane 1/8: both sides × length × 2.0 m (width of the parking strip it replaces, RASt 06). 260 m² with the [FLAG] 65 m estimate.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "m²",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "4*sidewalk_extension_spawn_2*extension_segment_length_m*2.0"
+        "expression": "2700*sidewalk_extension_spawn_2"
       },
       "baseline_value": 1,
       "value": 1.1,
       "min": 0,
-      "max": 2000,
+      "max": 3000,
       "active_control": null,
       "active_order": null,
       "active_states": null,
@@ -2509,7 +2508,8 @@
         "sidewalk_extension_area",
         "space_activity_index",
         "bus_bulb_fit",
-        "bus_stop_parking_loss"
+        "bus_stop_parking_loss",
+        "greenery"
       ],
       "influenced_by": [],
       "notes": "2026-10-28 (Tier 3 backing): Its activity effect now needs seating (see space_activity_index). 2026-10-21 (kerb space in the sim): Now has effects: parking spaces (−22), lingering capacity (sidewalk_extension_area) and a small activity term (space_activity_index). 2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
@@ -3803,7 +3803,7 @@
         "greenery"
       ],
       "influenced_by": [],
-      "notes": "",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Green boulevard on the middle lane: 1,790 m² = 15.57 % of the 11,500 m² map (was 13 %).",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -3832,7 +3832,7 @@
         "greenery"
       ],
       "influenced_by": [],
-      "notes": "2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now carries the street trees on both sides of the east-west axis (link weight 18 into greenery).",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Canopy alley on the E-W sidewalk extension: 1,350 m² per side, 2,700 m² for both = 23.48 % of the map (was 18 % per side, 36 %). Counts only with sidewalk_extension_spawn_2 = 1. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now carries the street trees on both sides of the east-west axis (link weight 18 into greenery).",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -5021,7 +5021,7 @@
     "greenery->visual_greenery_index": {
       "value": "",
       "source": "Kaplan & Kaplan 1989; Ulrich et al. 1991; Kardan et al. 2015; Konijnendijk 2021 (3-30-300).",
-      "notes": "NORMALIZED: max_available_units=500 | max_node_impact=50 pts | slope = max_node_impact / max_available_units = 50 / 500 = 0.100. To change the spawn ceiling, update max_available_units and recalculate slope accordingly. VGI budget: greenery 50 + grass 25 + green_facades 15 + blue_infrastructure 10 = 100 pts at full deployment of all sources. Greenery is the dominant volume (canopy fills the skyward FOV) but per-unit impact is diluted across 500 units.\n\n[2026-07-05] Curve redesign: live visual_greenery_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.3*(0.50*min(1,greenery/500)+0.20*min(1,grass/30)+0.15*min(1,blue_infrastructure/20)+0.15*min(1,green_facades/2)))). Weights and saturation rate are assumptions; sources support restorative/visibility rationale, not exact coefficients.",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Live formula uses min(1, greenery/39.04); greenery is % canopy cover of the 11,500 m² map. The 500-unit normalization below is out of date. NORMALIZED: max_available_units=500 | max_node_impact=50 pts | slope = max_node_impact / max_available_units = 50 / 500 = 0.100. To change the spawn ceiling, update max_available_units and recalculate slope accordingly. VGI budget: greenery 50 + grass 25 + green_facades 15 + blue_infrastructure 10 = 100 pts at full deployment of all sources. Greenery is the dominant volume (canopy fills the skyward FOV) but per-unit impact is diluted across 500 units.\n\n[2026-07-05] Curve redesign: live visual_greenery_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.3*(0.50*min(1,greenery/500)+0.20*min(1,grass/30)+0.15*min(1,blue_infrastructure/20)+0.15*min(1,green_facades/2)))). Weights and saturation rate are assumptions; sources support restorative/visibility rationale, not exact coefficients.",
       "status": "assumption",
       "confidence": "medium",
       "weight": 1,
@@ -5256,16 +5256,16 @@
     "greenery->temperature": {
       "value": "",
       "source": "https://environment.ec.europa.eu/news/effectiveness-urban-tree-planting-city-cooling-varies-between-european-regions-2023-07-27_en",
-      "notes": "NORMALIZED: max_available_units=500 | max_node_impact=−7°C | slope = max_node_impact / max_available_units = −7 / 500 = −0.014. To change the spawn ceiling, update max_available_units and recalculate slope accordingly. Rationale: 500 trees across 11,500 m² at intersection scale (≈23 m²/tree); research-derived per-% canopy cooling factor (−0.29°C) is attenuated ~10× by surrounding urban heat mass at intersection scale. Full deployment (500 trees) achieves −7°C — the dominant cooling source, coherent with blue_infrastructure (−6°C max) and green_facades (−4°C max), enabling players to solve extreme heat (45°C → 28°C) when all three are maxed. Consistent with Bowler et al. 2010, Landscape & Urban Planning 97(3):147-155 (DOI 10.1016/j.landurbplan.2010.05.006) — park ~ -0.94 C by day",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Slope −0.29 → 0. The temperature node formula already applies the greenery cooling, so this link counted it a second time. Kept with slope 0 (not deleted, not a plain link) so greenery stays a parent the formula can read without adding anything to base; a plain link would add a signal term. NORMALIZED: max_available_units=500 | max_node_impact=−7°C | slope = max_node_impact / max_available_units = −7 / 500 = −0.014. To change the spawn ceiling, update max_available_units and recalculate slope accordingly. Rationale: 500 trees across 11,500 m² at intersection scale (≈23 m²/tree); research-derived per-% canopy cooling factor (−0.29°C) is attenuated ~10× by surrounding urban heat mass at intersection scale. Full deployment (500 trees) achieves −7°C — the dominant cooling source, coherent with blue_infrastructure (−6°C max) and green_facades (−4°C max), enabling players to solve extreme heat (45°C → 28°C) when all three are maxed. Consistent with Bowler et al. 2010, Landscape & Urban Planning 97(3):147-155 (DOI 10.1016/j.landurbplan.2010.05.006) — park ~ -0.94 C by day",
       "status": "empirical",
       "confidence": "",
       "weight": 1,
       "formula": {
         "type": "linear_scale",
         "mode": "absolute",
-        "slope": -0.29,
+        "slope": 0,
         "intercept": 0,
-        "label": ""
+        "label": "slope 0: greenery cooling is applied by the temperature node formula"
       },
       "color": "",
       "issue_status": "unresolved",
@@ -5449,20 +5449,20 @@
     },
     "blue_infrastructure->temperature": {
       "value": "",
-      "source": "",
-      "notes": "NORMALIZED: max_available_units=20 | max_node_impact=−6°C | slope = max_node_impact / max_available_units = −6 / 20 = −0.300. To change the spawn ceiling, update max_available_units and recalculate slope accordingly. Rationale: 20 water features (fountains, channels, parklet water elements) at full deployment. Evaporative cooling effect, second-strongest cooling source after greenery.",
-      "status": "assumption",
-      "confidence": "",
+      "source": "Jacobs, Klok, Bruse, Cortesão, Lenzholzer & Kluck 2020, Are urban water bodies really cooling?, Urban Climate 32:100607, https://doi.org/10.1016/j.uclim.2020.100607; Völker et al. 2013, Erdkunde 67(4):355–371, https://www.erdkunde.uni-bonn.de/article/view/2737; Ulpiani et al. 2019 (mist field test), https://iris.univpm.it/handle/11566/265086",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Slope −0.3 → −0.1 °C per unit. blue_infrastructure is a plaza module with 0–2 units, so both features give −0.2 °C. The old −6 °C maximum (20 units × −0.3) had no source and was a balance choice to reach 28 °C on a heat day. Evidence: small urban water bodies cool the air around them by about 0.2 °C on average in the afternoon, 0.6 °C at most, and are negligible in design practice (Jacobs et al. 2020, ENVI-met, REALCOOL). The 2.5 K (95 % CI 1.9–3.2) of Völker et al. 2013 is for large lakes and rivers, not plaza features. Misting and spray systems cool 2–10 °C (8.2 °C in Ulpiani et al. 2019) but only downwind, while running, and less in wind or high humidity: a local felt effect, not junction-wide air temperature. Water can also raise humidity and slightly warm the junction at night. Effects of two features are taken as additive, which is generous. Old note: NORMALIZED: max_available_units=20 | max_node_impact=−6°C | slope = max_node_impact / max_available_units = −6 / 20 = −0.300. To change the spawn ceiling, update max_available_units and recalculate slope accordingly. Rationale: 20 water features (fountains, channels, parklet water elements) at full deployment. Evaporative cooling effect, second-strongest cooling source after greenery.",
+      "status": "empirical",
+      "confidence": "medium",
       "weight": 1,
       "formula": {
         "type": "linear_scale",
         "mode": "absolute",
-        "slope": -0.3,
+        "slope": -0.1,
         "intercept": 0,
-        "label": "max_node_impact −6°C / max_available_units 20"
+        "label": "−0.1 °C per water feature, −0.2 °C for both (typical small still water, Jacobs et al. 2020)"
       },
       "color": "",
-      "issue_status": "unresolved",
+      "issue_status": "none",
       "issue_priority": 240
     },
     "green_facades->temperature": {
@@ -6098,14 +6098,14 @@
     "middle_part_covered_trees->greenery": {
       "value": "",
       "source": "",
-      "notes": "",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Slope 13 → 15.57: 1,790 m² green boulevard / 11,500 m² map. Provenance only; the greenery node formula computes the value.",
       "status": "empirical",
       "confidence": "",
       "weight": 1,
       "formula": {
         "type": "linear_scale",
         "mode": "absolute",
-        "slope": 13,
+        "slope": 15.57,
         "intercept": 0,
         "label": ""
       },
@@ -6116,14 +6116,14 @@
     "spawn_2_canopy_streets->greenery": {
       "value": "",
       "source": "",
-      "notes": "2026-10-20 (E-W axis decided at one spawn point): slope 9 -> 18: this link now carries the street trees on both sides of the east-west axis (it was 9 here plus 9 from spawn_3_canopy_street, which was removed).",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Slope 18 → 11.74 per side: 2,700 m² sidewalk extension / 2 sides / 11,500 m² map. Provenance only; the greenery node formula computes the value and needs the sidewalk extension. 2026-10-20 (E-W axis decided at one spawn point): slope 9 -> 18: this link now carries the street trees on both sides of the east-west axis (it was 9 here plus 9 from spawn_3_canopy_street, which was removed).",
       "status": "empirical",
       "confidence": "",
       "weight": 1,
       "formula": {
         "type": "linear_scale",
         "mode": "absolute",
-        "slope": 18,
+        "slope": 11.74,
         "intercept": 0,
         "label": ""
       },
@@ -8680,22 +8680,10 @@
       "issue_status": "none",
       "issue_priority": 0
     },
-    "extension_segment_length_m->sidewalk_extension_area": {
-      "value": "",
-      "source": "FGSV EAR 23 (Empfehlungen für Anlagen des ruhenden Verkehrs, 2023): parallel stall 5.80 m × 2.00 m (EAR 05 had 5.70 m).",
-      "notes": "Full kerb length of each of the 4 stretches × 2.00 m strip.",
-      "status": "empirical",
-      "confidence": "medium",
-      "weight": 1,
-      "formula": null,
-      "color": "",
-      "issue_status": "none",
-      "issue_priority": 0
-    },
     "sidewalk_extension_area->pedestrians_stationary": {
       "value": "",
       "source": "Fruin 1971 (about 5.5 m² per person, comfortable lingering); this node's 40 % idle-eligible share.",
-      "notes": "The lingering ceiling grows with new sidewalk area. The existing 4,235 m² is the plaza, so the extension adds on top.",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): With 2,700 m² the lingering ceiling rises from about 808 to 966 people. The lingering ceiling grows with new sidewalk area. The existing 4,235 m² is the plaza, so the extension adds on top.",
       "status": "assumption",
       "confidence": "medium",
       "weight": 1,
@@ -9035,6 +9023,18 @@
       "notes": "Stalls that fit on the kerb length after the junction clearances, over 4 stretches.",
       "status": "empirical",
       "confidence": "medium"
+    },
+    "sidewalk_extension_spawn_2->greenery": {
+      "value": "",
+      "source": "",
+      "notes": "2026-10-29 (greenery on the 11,500 m² map): Gate: the canopy alley stands on the sidewalk extension, so it only counts when the extension is built. Read by the greenery node formula.",
+      "status": "assumption",
+      "confidence": "",
+      "weight": 1,
+      "formula": null,
+      "color": "",
+      "issue_status": "none",
+      "issue_priority": 0
     }
   },
   "system_rules": [
@@ -9270,7 +9270,7 @@
         "id": "id_11",
         "name": "lane_2/7",
         "type": "lane",
-        "startingState": "",
+        "startingState": "car_lanes_spawn_2",
         "spawnPointId": "id_4",
         "x": 0.6115130962928748,
         "y": 0.6224234069876053,
@@ -9284,7 +9284,7 @@
         "id": "id_22",
         "name": "lane_3/6",
         "type": "lane",
-        "startingState": "car lane",
+        "startingState": "car_lanes_spawn_2",
         "spawnPointId": "id_4",
         "x": 0.6411224206759093,
         "y": 0.5965181518703175,
@@ -9399,7 +9399,7 @@
         "id": "id_343",
         "name": "lane_a/f",
         "type": "lane",
-        "startingState": "parking",
+        "startingState": "ns_outer_parking_spawn_4_1",
         "spawnPointId": "id_43",
         "x": 0.560032589251832,
         "y": 0.3335901489076457,
@@ -9707,56 +9707,56 @@
     "options": {
       "id_10": {
         "id": "id_10",
-        "label": "sidewalk_extension",
+        "label": "sidewalk_extension_spawn_2",
         "unlockedElemId": "id_336",
         "elemId": "id_5",
         "node_id": "sidewalk_extension_spawn_2"
       },
       "id_13": {
         "id": "id_13",
-        "label": "car_lane",
+        "label": "car_lanes_spawn_2",
         "unlockedElemId": null,
         "elemId": "id_11",
         "node_id": "car_lanes_spawn_2"
       },
       "id_15": {
         "id": "id_15",
-        "label": "bus_lane",
+        "label": "bus_lanes_spawn_2",
         "unlockedElemId": "id_387",
         "elemId": "id_11",
         "node_id": "bus_lanes_spawn_2"
       },
       "id_24": {
         "id": "id_24",
-        "label": "car_lane",
+        "label": "car_lanes_spawn_2",
         "unlockedElemId": null,
         "elemId": "id_22",
         "node_id": "car_lanes_spawn_2"
       },
       "id_26": {
         "id": "id_26",
-        "label": "bus_lane",
+        "label": "bus_lanes_spawn_2",
         "unlockedElemId": "id_384",
         "elemId": "id_22",
         "node_id": "bus_lanes_spawn_2"
       },
       "id_187": {
         "id": "id_187",
-        "label": "bike_lane",
+        "label": "bike_lanes_spawn_2",
         "unlockedElemId": "id_214",
         "elemId": "id_5",
         "node_id": "bike_lanes_spawn_2"
       },
       "id_215": {
         "id": "id_215",
-        "label": "bike_lane_protection (when there is no canopy)",
+        "label": "bike_lane_protection",
         "unlockedElemId": null,
         "elemId": "id_214",
         "node_id": "bike_lane_protection"
       },
       "id_225": {
         "id": "id_225",
-        "label": "language_school",
+        "label": "school",
         "unlockedElemId": null,
         "elemId": "id_224",
         "node_id": "school"
@@ -9770,7 +9770,7 @@
       },
       "id_257": {
         "id": "id_257",
-        "label": "fitness",
+        "label": "sport_facility",
         "unlockedElemId": null,
         "elemId": "id_224",
         "node_id": "sport_facility"
@@ -9779,30 +9779,44 @@
         "id": "id_313",
         "label": "parking",
         "unlockedElemId": null,
-        "elemId": "id_5"
+        "elemId": "id_5",
+        "effects": [
+          {
+            "node_id": "sidewalk_extension_spawn_2",
+            "op": "set",
+            "value": 0
+          },
+          {
+            "node_id": "bike_lanes_spawn_2",
+            "op": "set",
+            "value": 0
+          }
+        ]
       },
       "id_318": {
         "id": "id_318",
-        "label": "tramline_4_mirrored_5",
+        "label": "tram_line_center",
         "unlockedElemId": null,
         "elemId": "id_317",
         "node_id": "tram_line_center"
       },
       "id_319": {
         "id": "id_319",
-        "label": "sport_terrain_ spanning_4_and_5",
+        "label": "sport_facility",
         "unlockedElemId": null,
-        "elemId": "id_317"
+        "elemId": "id_317",
+        "node_id": "sport_facility"
       },
       "id_327": {
         "id": "id_327",
-        "label": "parklet_greenery_and_seating",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_326"
+        "elemId": "id_326",
+        "node_id": "urban_furniture"
       },
       "id_331": {
         "id": "id_331",
-        "label": "carsharing_station",
+        "label": "carsharing",
         "unlockedElemId": null,
         "elemId": "id_326",
         "node_id": "carsharing",
@@ -9816,7 +9830,7 @@
       },
       "id_332": {
         "id": "id_332",
-        "label": "grass_patch",
+        "label": "grass",
         "unlockedElemId": null,
         "elemId": "id_326",
         "node_id": "grass"
@@ -9830,27 +9844,28 @@
       },
       "id_338": {
         "id": "id_338",
-        "label": "tree_lined_avenue_with_pockets",
+        "label": "spawn_2_canopy_streets",
         "unlockedElemId": null,
-        "elemId": "id_336"
+        "elemId": "id_336",
+        "node_id": "spawn_2_canopy_streets"
       },
       "id_339": {
         "id": "id_339",
-        "label": "bike_lane_2_mirrored_7",
+        "label": "bike_lanes_spawn_2",
         "unlockedElemId": null,
         "elemId": "id_336",
         "node_id": "bike_lanes_spawn_2"
       },
       "id_340": {
         "id": "id_340",
-        "label": "speed_limit_30",
+        "label": "speed_limit",
         "unlockedElemId": null,
         "elemId": "id_326",
         "node_id": "speed_limit"
       },
       "id_344": {
         "id": "id_344",
-        "label": "greenery_with_pockets",
+        "label": "ns_outer_parking_spawn_4_0",
         "unlockedElemId": "id_345",
         "elemId": "id_343",
         "node_id": "ns_outer_parking_spawn_4",
@@ -9876,7 +9891,7 @@
       },
       "id_349": {
         "id": "id_349",
-        "label": "parking",
+        "label": "ns_outer_parking_spawn_4_1",
         "unlockedElemId": null,
         "elemId": "id_343",
         "node_id": "ns_outer_parking_spawn_4",
@@ -9890,28 +9905,28 @@
       },
       "id_352": {
         "id": "id_352",
-        "label": "car_lane",
+        "label": "car_lanes_spawn_4",
         "unlockedElemId": null,
         "elemId": "id_351",
         "node_id": "car_lanes_spawn_4"
       },
       "id_353": {
         "id": "id_353",
-        "label": "bike_lane",
+        "label": "bike_lanes_spawn_4",
         "unlockedElemId": null,
         "elemId": "id_351",
         "node_id": "bike_lanes_spawn_4"
       },
       "id_356": {
         "id": "id_356",
-        "label": "car_lane",
+        "label": "car_lanes_spawn_4",
         "unlockedElemId": null,
         "elemId": "id_355",
         "node_id": "car_lanes_spawn_4"
       },
       "id_357": {
         "id": "id_357",
-        "label": "bike_lane",
+        "label": "bike_lanes_spawn_4",
         "unlockedElemId": null,
         "elemId": "id_355",
         "node_id": "bike_lanes_spawn_4"
@@ -9920,11 +9935,18 @@
         "id": "id_360",
         "label": "nothing",
         "unlockedElemId": null,
-        "elemId": "id_358"
+        "elemId": "id_358",
+        "effects": [
+          {
+            "node_id": "green_facades",
+            "op": "set",
+            "value": 0
+          }
+        ]
       },
       "id_361": {
         "id": "id_361",
-        "label": "green facade",
+        "label": "green_facades",
         "unlockedElemId": null,
         "elemId": "id_358",
         "node_id": "green_facades"
@@ -10010,19 +10032,27 @@
       },
       "id_378": {
         "id": "id_378",
-        "label": "sport_terrain",
+        "label": "sport_facility",
         "unlockedElemId": null,
-        "elemId": "id_376"
+        "elemId": "id_376",
+        "node_id": "sport_facility"
       },
       "id_385": {
         "id": "id_385",
         "label": "nothing",
         "unlockedElemId": null,
-        "elemId": "id_384"
+        "elemId": "id_384",
+        "effects": [
+          {
+            "node_id": "bus_stop_design",
+            "op": "set",
+            "value": 0
+          }
+        ]
       },
       "id_386": {
         "id": "id_386",
-        "label": "bus_stop_kerbside",
+        "label": "bus_stop_design_0",
         "unlockedElemId": null,
         "elemId": "id_384",
         "node_id": "bus_stops",
@@ -10038,11 +10068,18 @@
         "id": "id_389",
         "label": "nothing",
         "unlockedElemId": null,
-        "elemId": "id_387"
+        "elemId": "id_387",
+        "effects": [
+          {
+            "node_id": "bus_stop_design",
+            "op": "set",
+            "value": 0
+          }
+        ]
       },
       "id_390": {
         "id": "id_390",
-        "label": "bus_stop_kerbside",
+        "label": "bus_stop_design_0",
         "unlockedElemId": null,
         "elemId": "id_387",
         "node_id": "bus_stops",
@@ -10065,7 +10102,14 @@
         "id": "id_394",
         "label": "unused groundfloor",
         "unlockedElemId": null,
-        "elemId": "id_391"
+        "elemId": "id_391",
+        "effects": [
+          {
+            "node_id": "cafe",
+            "op": "set",
+            "value": 0
+          }
+        ]
       },
       "id_397": {
         "id": "id_397",
@@ -10099,39 +10143,42 @@
       },
       "id_404": {
         "id": "id_404",
-        "label": "bench",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_403"
+        "elemId": "id_403",
+        "node_id": "urban_furniture"
       },
       "id_405": {
         "id": "id_405",
-        "label": "parklett_greenery_seating",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_403"
+        "elemId": "id_403",
+        "node_id": "urban_furniture"
       },
       "id_407": {
         "id": "id_407",
-        "label": "fountain",
+        "label": "blue_infrastructure",
         "unlockedElemId": null,
-        "elemId": "id_403"
+        "elemId": "id_403",
+        "node_id": "blue_infrastructure"
       },
       "id_408": {
         "id": "id_408",
-        "label": "large shade tree",
+        "label": "plaza_trees",
         "unlockedElemId": null,
         "elemId": "id_403",
         "node_id": "plaza_trees"
       },
       "id_409": {
         "id": "id_409",
-        "label": "Quiet shade garden",
+        "label": "quiet_garden",
         "unlockedElemId": null,
         "elemId": "id_403",
         "node_id": "quiet_garden"
       },
       "id_410": {
         "id": "id_410",
-        "label": "public toilet",
+        "label": "accessible_comfort_station",
         "unlockedElemId": null,
         "elemId": "id_403",
         "node_id": "accessible_comfort_station"
@@ -10144,46 +10191,49 @@
       },
       "id_412": {
         "id": "id_412",
-        "label": "community table",
+        "label": "community_pavilion",
         "unlockedElemId": null,
         "elemId": "id_403",
         "node_id": "community_pavilion"
       },
       "id_415": {
         "id": "id_415",
-        "label": "bench",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_414"
+        "elemId": "id_414",
+        "node_id": "urban_furniture"
       },
       "id_416": {
         "id": "id_416",
-        "label": "parklett_greenery_seating",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_414"
+        "elemId": "id_414",
+        "node_id": "urban_furniture"
       },
       "id_417": {
         "id": "id_417",
-        "label": "fountain",
+        "label": "blue_infrastructure",
         "unlockedElemId": null,
-        "elemId": "id_414"
+        "elemId": "id_414",
+        "node_id": "blue_infrastructure"
       },
       "id_418": {
         "id": "id_418",
-        "label": "large shade tree",
+        "label": "plaza_trees",
         "unlockedElemId": null,
         "elemId": "id_414",
         "node_id": "plaza_trees"
       },
       "id_419": {
         "id": "id_419",
-        "label": "Quiet shade garden",
+        "label": "quiet_garden",
         "unlockedElemId": null,
         "elemId": "id_414",
         "node_id": "quiet_garden"
       },
       "id_420": {
         "id": "id_420",
-        "label": "public toilet",
+        "label": "accessible_comfort_station",
         "unlockedElemId": null,
         "elemId": "id_414",
         "node_id": "accessible_comfort_station"
@@ -10196,46 +10246,49 @@
       },
       "id_422": {
         "id": "id_422",
-        "label": "community table",
+        "label": "community_pavilion",
         "unlockedElemId": null,
         "elemId": "id_414",
         "node_id": "community_pavilion"
       },
       "id_424": {
         "id": "id_424",
-        "label": "bench",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_423"
+        "elemId": "id_423",
+        "node_id": "urban_furniture"
       },
       "id_425": {
         "id": "id_425",
-        "label": "parklett_greenery_seating",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_423"
+        "elemId": "id_423",
+        "node_id": "urban_furniture"
       },
       "id_426": {
         "id": "id_426",
-        "label": "fountain",
+        "label": "blue_infrastructure",
         "unlockedElemId": null,
-        "elemId": "id_423"
+        "elemId": "id_423",
+        "node_id": "blue_infrastructure"
       },
       "id_427": {
         "id": "id_427",
-        "label": "large shade tree",
+        "label": "plaza_trees",
         "unlockedElemId": null,
         "elemId": "id_423",
         "node_id": "plaza_trees"
       },
       "id_428": {
         "id": "id_428",
-        "label": "Quiet shade garden",
+        "label": "quiet_garden",
         "unlockedElemId": null,
         "elemId": "id_423",
         "node_id": "quiet_garden"
       },
       "id_429": {
         "id": "id_429",
-        "label": "public toilet",
+        "label": "accessible_comfort_station",
         "unlockedElemId": null,
         "elemId": "id_423",
         "node_id": "accessible_comfort_station"
@@ -10248,46 +10301,49 @@
       },
       "id_431": {
         "id": "id_431",
-        "label": "community table",
+        "label": "community_pavilion",
         "unlockedElemId": null,
         "elemId": "id_423",
         "node_id": "community_pavilion"
       },
       "id_433": {
         "id": "id_433",
-        "label": "bench",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_432"
+        "elemId": "id_432",
+        "node_id": "urban_furniture"
       },
       "id_434": {
         "id": "id_434",
-        "label": "parklett_greenery_seating",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_432"
+        "elemId": "id_432",
+        "node_id": "urban_furniture"
       },
       "id_435": {
         "id": "id_435",
-        "label": "fountain",
+        "label": "blue_infrastructure",
         "unlockedElemId": null,
-        "elemId": "id_432"
+        "elemId": "id_432",
+        "node_id": "blue_infrastructure"
       },
       "id_436": {
         "id": "id_436",
-        "label": "large shade tree",
+        "label": "plaza_trees",
         "unlockedElemId": null,
         "elemId": "id_432",
         "node_id": "plaza_trees"
       },
       "id_437": {
         "id": "id_437",
-        "label": "Quiet shade garden",
+        "label": "quiet_garden",
         "unlockedElemId": null,
         "elemId": "id_432",
         "node_id": "quiet_garden"
       },
       "id_438": {
         "id": "id_438",
-        "label": "public toilet",
+        "label": "accessible_comfort_station",
         "unlockedElemId": null,
         "elemId": "id_432",
         "node_id": "accessible_comfort_station"
@@ -10300,46 +10356,49 @@
       },
       "id_440": {
         "id": "id_440",
-        "label": "community table",
+        "label": "community_pavilion",
         "unlockedElemId": null,
         "elemId": "id_432",
         "node_id": "community_pavilion"
       },
       "id_442": {
         "id": "id_442",
-        "label": "bench",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_441"
+        "elemId": "id_441",
+        "node_id": "urban_furniture"
       },
       "id_443": {
         "id": "id_443",
-        "label": "parklett_greenery_seating",
+        "label": "urban_furniture",
         "unlockedElemId": null,
-        "elemId": "id_441"
+        "elemId": "id_441",
+        "node_id": "urban_furniture"
       },
       "id_444": {
         "id": "id_444",
-        "label": "fountain",
+        "label": "blue_infrastructure",
         "unlockedElemId": null,
-        "elemId": "id_441"
+        "elemId": "id_441",
+        "node_id": "blue_infrastructure"
       },
       "id_445": {
         "id": "id_445",
-        "label": "large shade tree",
+        "label": "plaza_trees",
         "unlockedElemId": null,
         "elemId": "id_441",
         "node_id": "plaza_trees"
       },
       "id_446": {
         "id": "id_446",
-        "label": "Quiet shade garden",
+        "label": "quiet_garden",
         "unlockedElemId": null,
         "elemId": "id_441",
         "node_id": "quiet_garden"
       },
       "id_447": {
         "id": "id_447",
-        "label": "public toilet",
+        "label": "accessible_comfort_station",
         "unlockedElemId": null,
         "elemId": "id_441",
         "node_id": "accessible_comfort_station"
@@ -10352,21 +10411,21 @@
       },
       "id_449": {
         "id": "id_449",
-        "label": "community table",
+        "label": "community_pavilion",
         "unlockedElemId": null,
         "elemId": "id_441",
         "node_id": "community_pavilion"
       },
       "id_451": {
         "id": "id_451",
-        "label": "car_lane_4_mirrored_5",
+        "label": "car_lanes_spawn_2",
         "unlockedElemId": null,
         "elemId": "id_317",
         "node_id": "car_lanes_spawn_2"
       },
       "id_452": {
         "id": "id_452",
-        "label": "bus_stop_bulb",
+        "label": "bus_stop_design_1",
         "unlockedElemId": null,
         "elemId": "id_384",
         "node_id": "bus_stops",
@@ -10380,7 +10439,7 @@
       },
       "id_453": {
         "id": "id_453",
-        "label": "bus_stop_two_bays",
+        "label": "bus_stop_design_2",
         "unlockedElemId": null,
         "elemId": "id_384",
         "node_id": "bus_stops",
@@ -10394,7 +10453,7 @@
       },
       "id_454": {
         "id": "id_454",
-        "label": "bus_stop_bulb",
+        "label": "bus_stop_design_1",
         "unlockedElemId": null,
         "elemId": "id_387",
         "node_id": "bus_stops",
@@ -10408,7 +10467,7 @@
       },
       "id_455": {
         "id": "id_455",
-        "label": "bus_stop_two_bays",
+        "label": "bus_stop_design_2",
         "unlockedElemId": null,
         "elemId": "id_387",
         "node_id": "bus_stops",

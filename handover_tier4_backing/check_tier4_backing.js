@@ -29,6 +29,6 @@ const sp = l => run(M, { [L]: l }).get('spaces_1_8');
 ok(sp(65 + 5.8) === 42 && sp(65 - 5.8) === 34, 'each 5.8 m of kerb changes the count by 4', `${sp(59.2)} / ${sp(70.8)}`);
 ok(sp(4) === 0 && sp(7) === 0, 'a stretch shorter than the clearance gives 0, not a negative count', `${sp(4)} / ${sp(7)}`);
 const on = run(M, { [EXT]: 1 });
-ok(on.get('sidewalk_extension_area') === 520, 'extension area: 4 × 65 m × 2.0 m = 520 m²');
+ok(on.get('sidewalk_extension_area') === 2700, 'extension area: fixed 2,700 m² from the game set-up (2026-10-29; was 4 × 65 m × 2.0 m = 520 m²)');
 ok(on.get('parallel_parking') === 142, 'extension on 1/8 removes 38 spaces: 180 → 142');
 process.exitCode = failed ? 1 : 0;

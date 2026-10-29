@@ -67,7 +67,7 @@ ok(['space_activity_index', 'public_space_quality', 'pedestrians_stationary'].ev
 const offS = solve({ [EXT]: 0, urban_furniture: 3 }), onS = solve({ [EXT]: 1, urban_furniture: 3 });
 ok(onS('space_activity_index') > offS('space_activity_index') && onS('public_space_quality') > offS('public_space_quality') && onS('pedestrians_stationary') >= offS('pedestrians_stationary'), 'extension on, with seating: activity, public space quality and lingering go up');
 ok(on('pedestrians_stationary') >= off('pedestrians_stationary'), 'extension on, no seating: lingering room still grows (area term)');
-ok(near(on('sidewalk_extension_area'), 520, 1e-9), 'extension area: 4 stretches × 65 m × 2.0 m = 520 m² (Tier 4)');
+ok(near(on('sidewalk_extension_area'), 2700, 1e-9), 'extension area: fixed 2,700 m² from the game set-up (2026-10-29; was 4 × 65 m × 2.0 m = 520 m²)');
 
 // reference table
 const f = (x, n = 1) => x.toFixed(n).padStart(9);
