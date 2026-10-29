@@ -478,18 +478,17 @@
       ],
       "influenced_by": [
         "greenery",
-        "grass",
         "blue_infrastructure",
         "green_facades"
       ],
-      "notes": "2026-10-29 (one green facade): Facade term now min(1, green_facades): the one green facade fills it (was /2 for two buildings). 2026-10-29 (greenery on the 11,500 m² map): Canopy term now saturates at greenery/39.04, the new maximum canopy share, so full planting still fills the canopy half of the index (was /49). [2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
+      "notes": "2026-10-29 (grass removed): The grass node is deleted; its 0.20 term is gone from the formula, so the index now tops out at 100*(1-exp(-2.3*0.80)) ≈ 84. Older notes below still name grass. 2026-10-29 (one green facade): Facade term now min(1, green_facades): the one green facade fills it (was /2 for two buildings). 2026-10-29 (greenery on the 11,500 m² map): Canopy term now saturates at greenery/39.04, the new maximum canopy share, so full planting still fills the canopy half of the index (was /49). [2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
       "priority": "",
       "value_kind": "score",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "100*(1 - exp(-2.3*( 0.50*min(1,greenery/39.04) + 0.20*min(1,grass/4) + 0.15*min(1,blue_infrastructure/2) + 0.15*min(1,green_facades) )))"
+        "expression": "100*(1 - exp(-2.3*( 0.50*min(1,greenery/39.04) + 0.15*min(1,blue_infrastructure/2) + 0.15*min(1,green_facades) )))"
       },
       "baseline_value": 0,
       "value": 0,
@@ -501,37 +500,6 @@
       "evidence_status": "",
       "_x": 4860,
       "_y": 720
-    },
-    {
-      "id": "grass",
-      "label": "Grass",
-      "type": "active",
-      "status": "defined",
-      "influences": [
-        "visual_greenery_index",
-        "plaza_cells_used",
-        "plaza_check_limits"
-      ],
-      "influenced_by": [],
-      "notes": "",
-      "priority": "",
-      "value_kind": "absolute",
-      "unit": "",
-      "passive_precision": "decimals",
-      "node_formula": null,
-      "baseline_value": 0,
-      "value": 0,
-      "min": 0,
-      "max": 6,
-      "active_control": "slider",
-      "active_order": 1,
-      "active_states": {
-        "a": 0,
-        "b": 4
-      },
-      "evidence_status": "",
-      "_x": 5950,
-      "_y": 1020
     },
     {
       "id": "cafe",
@@ -4357,7 +4325,6 @@
         "plaza_check_limits"
       ],
       "influenced_by": [
-        "grass",
         "cafe",
         "urban_furniture",
         "blue_infrastructure",
@@ -4376,7 +4343,7 @@
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "1*urban_furniture + 2*cafe + 1*plaza_trees + 1*grass + 1*blue_infrastructure + 2*playground + 2*quiet_garden + 6*inclusive_play_court + 1*accessible_comfort_station + 1*community_pavilion + 2*separated_dog_garden"
+        "expression": "1*urban_furniture + 2*cafe + 1*plaza_trees + 1*blue_infrastructure + 2*playground + 2*quiet_garden + 6*inclusive_play_court + 1*accessible_comfort_station + 1*community_pavilion + 2*separated_dog_garden"
       },
       "baseline_value": 0,
       "value": 0,
@@ -4503,7 +4470,6 @@
       "status": "defined",
       "influences": [],
       "influenced_by": [
-        "grass",
         "cafe",
         "urban_furniture",
         "blue_infrastructure",
@@ -4520,7 +4486,7 @@
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "(plaza_cells_used > 12 ? 1 : 0) + (plaza_modules_used > 8 ? 1 : 0) + (plaza_upkeep_used > 5 ? 1 : 0) + ((urban_furniture > urban_furniture_max) + (cafe > 2) + (grass > 4) + (blue_infrastructure > 1) + (playground > 1) > 0 ? 1 : 0)"
+        "expression": "(plaza_cells_used > 12 ? 1 : 0) + (plaza_modules_used > 8 ? 1 : 0) + (plaza_upkeep_used > 5 ? 1 : 0) + ((urban_furniture > urban_furniture_max) + (cafe > 2) + (blue_infrastructure > 1) + (playground > 1) > 0 ? 1 : 0)"
       },
       "baseline_value": 0,
       "value": 0,
@@ -4732,24 +4698,6 @@
         "type": "linear_scale",
         "mode": "absolute",
         "slope": 0.1,
-        "intercept": 0,
-        "label": "Inert provenance edge; live VGI node_formula applies assumed saturating envelope"
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 120
-    },
-    "grass->visual_greenery_index": {
-      "value": "",
-      "source": "Kaplan & Kaplan 1989; Ulrich et al. 1991; Kardan et al. 2015; Konijnendijk 2021 (3-30-300).",
-      "notes": "NORMALIZED: max_available_units=30 | max_node_impact=25 pts | slope = max_node_impact / max_available_units = 25 / 30 ≈ 0.833. To change the spawn ceiling, update max_available_units and recalculate slope accordingly. VGI budget share: 25 of 100 pts. Ground-plane vegetation — visible but below eye level, lower visual weight than canopy trees or facade greenery.\n\n[2026-07-05] Curve redesign: live visual_greenery_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.3*(0.50*min(1,greenery/500)+0.20*min(1,grass/30)+0.15*min(1,blue_infrastructure/20)+0.15*min(1,green_facades/2)))). Weights and saturation rate are assumptions; sources support restorative/visibility rationale, not exact coefficients.",
-      "status": "assumption",
-      "confidence": "medium",
-      "weight": 1,
-      "formula": {
-        "type": "linear_scale",
-        "mode": "absolute",
-        "slope": 0.833,
         "intercept": 0,
         "label": "Inert provenance edge; live VGI node_formula applies assumed saturating envelope"
       },
@@ -6449,16 +6397,6 @@
       "formula": null,
       "color": ""
     },
-    "grass->plaza_cells_used": {
-      "value": "",
-      "source": "existing node read by the persona layer",
-      "notes": "Read by Plaza total: cells used (max 12). Design assumption.",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": ""
-    },
     "blue_infrastructure->plaza_cells_used": {
       "value": "",
       "source": "existing node read by the persona layer",
@@ -6760,16 +6698,6 @@
       "color": ""
     },
     "cafe->plaza_check_limits": {
-      "value": "",
-      "source": "existing node read by the persona layer",
-      "notes": "Read by Plaza check: limits exceeded (=0). Design assumption.",
-      "status": "assumption",
-      "confidence": "",
-      "weight": 1,
-      "formula": null,
-      "color": ""
-    },
-    "grass->plaza_check_limits": {
       "value": "",
       "source": "existing node read by the persona layer",
       "notes": "Read by Plaza check: limits exceeded (=0). Design assumption.",
@@ -8867,7 +8795,6 @@
         "options": [
           "id_327",
           "id_331",
-          "id_332",
           "id_333",
           "id_340",
           "id_460"
@@ -9305,13 +9232,6 @@
             "value": 1
           }
         ]
-      },
-      "id_332": {
-        "id": "id_332",
-        "label": "grass",
-        "unlockedElemId": null,
-        "elemId": "id_326",
-        "node_id": "grass"
       },
       "id_333": {
         "id": "id_333",

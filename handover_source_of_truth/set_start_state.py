@@ -34,7 +34,6 @@ START = {
     "speed_limit": 0,
     # Kerb / corner modules
     "ev_charger": 0,
-    "grass": 0,
     "bike_parking": 0,
     "bike_lane_protection": 0,
     "protected_intersection": 0,
