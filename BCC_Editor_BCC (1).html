@@ -533,6 +533,8 @@ body.is-focus #veil,body.is-modal #veil{opacity:1;visibility:visible;transition:
 .option-header{display:flex;align-items:center;gap:6px;min-height:34px;padding:4px 8px;cursor:pointer}
 .option-header:hover,.option-header.expanded{background:var(--warm)}
 .opt-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* options that reach no model node */
+.option-card.no-node{border-color:#A40130}.option-card.no-node .opt-label,.option-card.no-node .opt-impact .muted,.impact-tbl tr.no-node td:first-child{color:#A40130}
 .opt-expand{width:10px;font-size:10px;color:var(--ink2)}
 .opt-unlock{font-size:11px;color:var(--ink2);border:1px solid var(--field);border-radius:9px;padding:0 6px;height:18px;line-height:16px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 .opt-unlock:hover{border-color:var(--ink2);color:var(--ink)}
@@ -4065,7 +4067,7 @@ function spawnRenderOverview(content){
       const r = rows[i++];
       if (!r.o){ html += `<tr class="el"><td colspan="${cols.length + 1}" onclick="spawnSelectElem('${jsq(r.el.id)}')">${r.sp ? 'SP ' + esc(r.sp.id) + ' · ' : '↳ '}${esc(r.el.name)} ${r.el.driver ? '· ' + esc(r.el.driver) : ''}</td></tr>`; continue; }
       if (!r.o) continue; const imp = optionImpact(r.o.id);
-      html += `<tr><td onclick="spawnSelectElem('${jsq(r.el.id)}')" title="${esc(imp.note)}">${esc(r.o.label)}${imp.effs.length ? '' : ' <span class="muted">·</span>'}</td>${cols.map(([id]) => { const d = imp.deltas[id]; return `<td class="${d > 0 ? 'rise' : d < 0 ? 'fall' : 'muted'}">${d ? fmtDelta(d) : imp.effs.length ? '0' : ''}</td>`; }).join('')}</tr>`;
+      html += `<tr${imp.kind === 'none' ? ' class="no-node"' : ''}><td onclick="spawnSelectElem('${jsq(r.el.id)}')" title="${esc(imp.note)}">${esc(r.o.label)}${imp.effs.length ? '' : ' <span class="muted">·</span>'}</td>${cols.map(([id]) => { const d = imp.deltas[id]; return `<td class="${d > 0 ? 'rise' : d < 0 ? 'fall' : 'muted'}">${d ? fmtDelta(d) : imp.effs.length ? '0' : ''}</td>`; }).join('')}</tr>`;
     }
     tb.insertAdjacentHTML('beforeend', html);
     const pr = content.querySelector('#ov-prog'); if (pr) pr.textContent = i < rows.length ? `${i}/${rows.length}` : '';
@@ -4165,7 +4167,7 @@ function spawnRenderOptionCard(oid, slotFit){
       <div class="field"><label>unlocks a sub-interaction</label>${unlockEl ? `<div class="unlock-section"><span>→ ${esc(unlockEl.name)}</span><button class="btn btn-xs" onclick="spawnNavToSubElem('${jsq(oid)}')">open ›</button><button class="btn btn-xs btn-red" onclick="spawnRemoveUnlock('${jsq(oid)}')">remove</button></div>` : `<button class="btn btn-xs" onclick="spawnAddUnlock('${jsq(oid)}')">+ create unlock</button>`}</div>
       <div style="display:flex;justify-content:flex-end"><button class="btn btn-xs btn-red" onclick="spawnDeleteOption('${jsq(oid)}')">delete option</button></div></div>`;
   }
-  return `<div class="option-card" id="ocard-${esc(oid)}"><div class="option-header${isExp ? ' expanded' : ''}" onclick="spawnToggleOpt('${jsq(oid)}')"><span class="opt-expand">${isExp ? '▾' : '▸'}</span><span class="opt-label">${esc(o.label)}</span>${o.cts_option ? `<span class="drv"${fitBad ? ' style="border-color:var(--warn);color:var(--warn)"' : ''}>${esc(o.cts_option)}</span>` : ''}${o.node_id ? `<span class="drv" style="${nodeOk ? '' : 'border-color:var(--fault);color:var(--fault)'}" title="${nodeOk ? 'model node' : 'not in the model'}">${esc(o.node_id)}</span>` : ''}${stChip(o.status)}${unlockEl ? `<span class="opt-unlock" onclick="event.stopPropagation();spawnNavToSubElem('${jsq(oid)}')">→ ${esc(unlockEl.name)}</span>` : ''}</div>${isExp ? '' : `<div class="opt-impact">${impactChips(oid)}</div>`}${body}</div>`;
+  return `<div class="option-card${optionImpact(oid)?.kind === 'none' ? ' no-node' : ''}" id="ocard-${esc(oid)}"><div class="option-header${isExp ? ' expanded' : ''}" onclick="spawnToggleOpt('${jsq(oid)}')"><span class="opt-expand">${isExp ? '▾' : '▸'}</span><span class="opt-label">${esc(o.label)}</span>${o.cts_option ? `<span class="drv"${fitBad ? ' style="border-color:var(--warn);color:var(--warn)"' : ''}>${esc(o.cts_option)}</span>` : ''}${o.node_id ? `<span class="drv" style="${nodeOk ? '' : 'border-color:var(--fault);color:var(--fault)'}" title="${nodeOk ? 'model node' : 'not in the model'}">${esc(o.node_id)}</span>` : ''}${stChip(o.status)}${unlockEl ? `<span class="opt-unlock" onclick="event.stopPropagation();spawnNavToSubElem('${jsq(oid)}')">→ ${esc(unlockEl.name)}</span>` : ''}</div>${isExp ? '' : `<div class="opt-impact">${impactChips(oid)}</div>`}${body}</div>`;
 }
 function bindOptionCards(host){
   if (!host) return;
