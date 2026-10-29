@@ -36,6 +36,14 @@ Two levers set greenery:
 - **`visual_greenery_index`**: `greenery/49` → `greenery/39.04`, so full planting still fills the canopy term.
 - **`blue_infrastructure → temperature`**: slope −0.3 → **−0.1 °C per water feature**, so both features give −0.2 °C. Status is now "empirical", confidence medium, with sources in the link.
 
+- **Green facades are independent of the plaza.** They sit on the buildings (spawn 5, element "facade"), not on the plaza. Three terms are removed:
+  - `1*green_facades` from `plaza_modules_used`
+  - `2*green_facades` from `plaza_upkeep_used`
+  - `(green_facades > 2)` from `plaza_check_limits`
+  - Their three links are removed too. Facades now feed only `temperature` and `visual_greenery_index`.
+- **`green_facades → temperature`**: slope −2 → **−0.15 °C per building**, so both give −0.3 °C. Status is now "empirical", confidence medium, with sources in the link.
+- **`green_facades → visual_greenery_index`**: the weight stays as it is. Two facade-specific wellbeing studies are added as sources.
+
 ## Water cooling: sources
 
 `blue_infrastructure` is a plaza module with 0–2 units. The old note assumed 20 units with a −6 °C maximum, but it had no source. That value was a balance choice, set so a 45 °C day could reach 28 °C.
@@ -50,6 +58,25 @@ Two levers set greenery:
 - **Misting:** the larger misting effect is felt locally and does not cool the air across the junction. If the game's feature becomes a mist system, model it as a local effect, the way `plaza_trees` is.
 - **Night-time:** water can raise humidity and slightly warm the junction at night. This is not modelled.
 
+## Facade cooling: sources
+
+The old −2 °C per building (−4 °C for both) had no source.
+
+| Finding | Value | Source |
+|---|---|---|
+| Street-canyon simulation (CFD), greened facades | air −0.1 K on average, −0.3 K at most, under 0.05 K mid-street | [engrXiv 2599](https://engrxiv.org/preprint/view/2599) |
+| São Paulo simulation (ENVI-met) | clear difference only 15 cm from the wall, insignificant from 60 cm | [Pós FAUUSP](https://journals.usp.br/posfau/article/view/195441) |
+| Field measurements | 0.6–1.0 °C, only close to the wall | [IAU](https://sanad.iau.ir/en/Article/839993) |
+| Felt comfort near the wall, Hong Kong | PET −0.17 to −1.4 °C, mainly from greening low on the facade | Cui et al. 2022, [PolyU](https://ira.lib.polyu.edu.hk/handle/10397/99532) |
+| Whole canyons with green walls and roofs, 2D model, mostly hot climates | up to 8–13 °C | Alexandri & Jones 2008, *Building and Environment* 43(4), [Cardiff](https://orca.cardiff.ac.uk/id/eprint/29416/) |
+
+- **Why −0.15 °C per building:** two buildings at one junction match the street-canyon maximum of −0.3 K.
+- **Alexandri & Jones:** their scenario (every canyon greened, roofs included) doesn't fit this map.
+- **Comfort next to the wall:** this is local, felt comfort, like `plaza_trees`. It is not modelled as junction-wide cooling.
+- **Visual and wellbeing effects** are supported for facades specifically:
+  - [NTU Singapore VR study, 2021](https://ntu.edu.sg/news/detail/vr-study-finds-vertical-greenery-useful-as-a-stress-buffer): stress rose with green-painted walls, not with planted facades.
+  - [Sheffield image trial, 2024](https://eprints.whiterose.ac.uk/id/eprint/233462), n = 401: facade greenery raised perceived happiness more than ground-level greenery.
+
 ## Temperature (editor solver)
 
 | Case | 19 °C day | 45 °C day |
@@ -58,9 +85,10 @@ Two levers set greenery:
 | Sidewalk extension only | 16.49 | 38.91 |
 | All trees | 15.74 (was 2.2) | 37.10 (was 24.4) |
 | Both water features only | — | 44.80 |
-| All trees + both water features + both facades | — | 32.90 |
+| Both green facades only | — | 44.70 |
+| All trees + both water features + both facades | — | 36.60 |
 
-The old design target, "45 → 28 °C when trees, water and facades are maxed", depended on the unsourced −6 °C for water. With sourced values, the best heat-day result is about 33 °C.
+The old design target, "45 → 28 °C when trees, water and facades are maxed", depended on the unsourced −6 °C for water. It also depended on the unsourced −4 °C for facades. With sourced values, the best heat-day result is about 36.6 °C. Nearly all junction-scale cooling comes from canopy; water and facades add −0.5 °C together.
 
 ## Side effects
 
@@ -72,11 +100,14 @@ The old design target, "45 → 28 °C when trees, water and facades are maxed", 
 ## Open [FLAG]s
 
 - **Canopy vs planted area:** canopy area is assumed equal to the planted area at maturity. Crowns overhanging the road would raise it.
+- **Facade count:** the spawn tree has one facade element (spawn 5, chosen at most once). Check whether the game can reach `green_facades` = 2.
 - **Water type:** if the game's water feature is a mist or spray system, the junction-wide −0.1 °C stays, but a separate local "felt" effect would be justified.
 
 ## Files
 
 - `apply_greenery_area.py`: step 1, the rescale, the double count and the water slope. It runs once and has been applied.
 - `apply_merge_canopy.py`: step 2, which merges the canopy into the sidewalk extension and deletes the alley slider. It runs once, after step 1, and has been applied.
-- Run in order on `.tmp/update.before_greenery_2026-10-29.json`, steps 1 and 2 reproduce `update.json` exactly.
+- `apply_facades_off_plaza.py`: step 3, which takes green facades off the plaza budget. It runs once, after step 2, and has been applied.
+- `apply_facade_cooling.py`: step 4, which sets facade cooling to −0.15 °C per building and adds the sources. It runs once, after step 3, and has been applied.
+- Run in order on `.tmp/update.before_greenery_2026-10-29.json`, steps 1–4 reproduce `update.json` exactly.
 - `check_greenery_area.js`: `node handover_greenery_area/check_greenery_area.js`
