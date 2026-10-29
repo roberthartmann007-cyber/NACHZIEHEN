@@ -54,8 +54,7 @@ START = {
     "school": 0,
     "park": 0,
     "sport_facility": 0,
-    # Bus: the stops nearby on the line stay (3); no stop built at this intersection
-    "bus_stops": 3,
+    # Bus: no stop built at this intersection (bus_stops is a fixed 3, not a control)
     "new_bus_stop": 0,
 }
 
@@ -136,7 +135,9 @@ def main():
     if PATH.resolve() == (ROOT / "update.json").resolve() and not BACKUP.exists():
         shutil.copy2(PATH, BACKUP)
         print(f"backup: {BACKUP.relative_to(ROOT)}")
-    PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    # keep the file's own format (the editor saves without a trailing newline)
+    end = "\n" if PATH.read_text().endswith("\n") else ""
+    PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2) + end)
     print("\n".join(changes))
     print(f"{len(changes)} changes written to {PATH.name}")
 
