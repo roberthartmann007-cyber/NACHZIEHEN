@@ -2,23 +2,32 @@
 
 Greenery is now the share of the map covered by tree canopy, based on the planted areas in the new game set-up. Greenery also no longer cools the junction twice.
 
-Every change below also has a dated note (`2026-10-29 (greenery on the 11,500 m² map)`) on its node or link in `update.json`, so the editor shows the reasoning.
+Every change below also has a dated note in `update.json` on its node or link, so the editor shows the reasoning. The notes are tagged `2026-10-29 (greenery on the 11,500 m² map)` or `2026-10-29 (canopy merged into the sidewalk extension)`.
 
 ## Areas
 
-| Element | Area | Share of 11,500 m² | Before |
+Two levers set greenery:
+
+| Lever | Area when on | Share of 11,500 m² | Before |
 |---|---|---|---|
-| Green boulevard, middle lane (`middle_part_covered_trees`) | 1,790 m² | 15.57 % | 13 % |
-| Canopy alley on the sidewalk extension (`spawn_2_canopy_streets`, 0–2 sides) | 2,700 m² (1,350 per side) | 23.48 % | 36 % |
+| Green boulevard, middle lane (`middle_part_covered_trees`, 0/1) | 1,790 m² | 15.57 % | 13 % |
+| **Sidewalk extension at spawn 2** (`sidewalk_extension_spawn_2`, 0/1) | 2,700 m² | 23.48 % | 36 % from a separate alley slider |
 | Greenery maximum | 4,490 m² | 39.04 % | 49 % |
+
+**Turning on the sidewalk extension at spawn 2 covers its 2,700 m² with canopy directly.** The same switch also adds the 2,700 m² of sidewalk (`sidewalk_extension_area`). No second choice is needed.
 
 ## Changes
 
-- **`greenery`**: new node formula `100*(1790*middle_part_covered_trees + 1350*spawn_2_canopy_streets*sidewalk_extension_spawn_2)/11500`.
+- **`greenery`**: node formula `100*(1790*middle_part_covered_trees + 2700*sidewalk_extension_spawn_2)/11500`.
   - Unit is now "% canopy cover", max 40.
-  - The canopy alley counts only when the sidewalk extension is built. The game spawn tree already works this way: option `id_10` unlocks `id_336`.
-  - New link `sidewalk_extension_spawn_2 → greenery`.
-  - Link slopes updated for reference only: 13 → 15.57 and 18 → 11.74.
+  - Links, for reference only (the formula computes the value):
+    - `middle_part_covered_trees → greenery`, slope 13 → 15.57
+    - `sidewalk_extension_spawn_2 → greenery`, slope 23.48 (new)
+- **Deleted, canopy alley slider:**
+  - **`spawn_2_canopy_streets`** (0–2 sides × 1,350 m²) and its link to `greenery`. With trees always on the extension, the slider only repeated the extension choice.
+  - **Spawn option `id_338`** (`tree_lined_avenue_with_pockets`), which set that slider. It sat in sub-element `id_336` under the sidewalk extension. `id_336` now holds only `bike_lane_2_mirrored_7` (`id_339`).
+  - `handover_source_of_truth/align_spawn_names.py` still has a mapping for `tree_lined_avenue_with_pockets`. With the option gone it matches nothing, so it was left as it is.
+  - No other node depended on the slider, so nothing else became obsolete. `extension_segment_length_m` stays because it still sets `spaces_1_8`.
 - **`greenery → temperature`**: slope −0.29 → 0.
   - The temperature formula already applies the greenery cooling, so the link counted it twice.
   - The link is kept at slope 0, not deleted: greenery stays a parent the formula can read. A link without a formula would add a signal term to `base`.
@@ -46,7 +55,7 @@ Every change below also has a dated note (`2026-10-29 (greenery on the 11,500 m�
 | Case | 19 °C day | 45 °C day |
 |---|---|---|
 | Green boulevard only | 17.09 | 40.37 |
-| Canopy alley only | 16.49 | 38.91 |
+| Sidewalk extension only | 16.49 | 38.91 |
 | All trees | 15.74 (was 2.2) | 37.10 (was 24.4) |
 | Both water features only | — | 44.80 |
 | All trees + both water features + both facades | — | 32.90 |
@@ -67,5 +76,7 @@ The old design target, "45 → 28 °C when trees, water and facades are maxed", 
 
 ## Files
 
-- `apply_greenery_area.py`: the change. It runs once and has been applied. Run on `.tmp/update.before_greenery_2026-10-29.json`, it reproduces `update.json` exactly.
+- `apply_greenery_area.py`: step 1, the rescale, the double count and the water slope. It runs once and has been applied.
+- `apply_merge_canopy.py`: step 2, which merges the canopy into the sidewalk extension and deletes the alley slider. It runs once, after step 1, and has been applied.
+- Run in order on `.tmp/update.before_greenery_2026-10-29.json`, steps 1 and 2 reproduce `update.json` exactly.
 - `check_greenery_area.js`: `node handover_greenery_area/check_greenery_area.js`

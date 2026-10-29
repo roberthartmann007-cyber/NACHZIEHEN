@@ -20,15 +20,16 @@ for (const id of ['greenery', 'temperature', 'visual_greenery_index', 'sidewalk_
   ok(CES.validateExpression(by.get(id).node_formula.expression, false, ctx).ok, `${id} formula compiles in the game parser`);
 ok(p.edge_heuristics['greenery->temperature'].formula.slope === 0, 'greenery → temperature adds nothing to base (slope 0)');
 
-const MID = 'middle_part_covered_trees', ALLEY = 'spawn_2_canopy_streets', EXT = 'sidewalk_extension_spawn_2';
+const MID = 'middle_part_covered_trees', EXT = 'sidewalk_extension_spawn_2';
+ok(!by.has('spawn_2_canopy_streets') && !p.spawn.options.id_338 && !p.spawn.elements.id_336.options.includes('id_338'), 'canopy alley slider and its spawn option are deleted');
+ok(!Object.keys(p.edge_heuristics).some(k => k.includes('spawn_2_canopy_streets')), 'no link left to the canopy alley slider');
 const off = { blue_infrastructure: 0, green_facades: 0, rain: 0 };
 const heat = { ...off, neutral_weather: 0, extreme_summer_heat: 1 }, mild = { ...off, neutral_weather: 1, extreme_summer_heat: 0 };
 const cases = [
-  ['no trees', { [MID]: 0, [ALLEY]: 0, [EXT]: 0 }, 0],
-  ['green boulevard', { [MID]: 1, [ALLEY]: 0, [EXT]: 0 }, 15.57],
-  ['alley, no extension', { [MID]: 0, [ALLEY]: 2, [EXT]: 0 }, 0],
-  ['alley, both sides', { [MID]: 0, [ALLEY]: 2, [EXT]: 1 }, 23.48],
-  ['all trees', { [MID]: 1, [ALLEY]: 2, [EXT]: 1 }, 39.04],
+  ['no trees', { [MID]: 0, [EXT]: 0 }, 0],
+  ['green boulevard', { [MID]: 1, [EXT]: 0 }, 15.57],
+  ['sidewalk extension', { [MID]: 0, [EXT]: 1 }, 23.48],
+  ['all trees', { [MID]: 1, [EXT]: 1 }, 39.04],
 ];
 console.log('\ncase                  greenery   19 °C day   45 °C day   VGI');
 for (const [label, lv, g] of cases) {
@@ -36,12 +37,12 @@ for (const [label, lv, g] of cases) {
   console.log(`${label.padEnd(22)}${a('greenery').toFixed(2).padStart(7)} %${a('temperature').toFixed(2).padStart(10)}${b('temperature').toFixed(2).padStart(12)}${a('visual_greenery_index').toFixed(1).padStart(7)}`);
   ok(near(a('greenery'), g), `${label}: greenery ${g} %`);
 }
-const all = { [MID]: 1, [ALLEY]: 2, [EXT]: 1 };
+const all = { [MID]: 1, [EXT]: 1 };
 ok(near(solve({ ...mild, ...all })('temperature'), 15.74, 0.1), '19 °C day with all trees ≈ 15.7 °C (was 2.2)');
 ok(near(solve({ ...heat, ...all })('temperature'), 37.10, 0.1), '45 °C day with all trees ≈ 37.1 °C (was 24.4)');
 const maxed = solve({ ...heat, ...all, blue_infrastructure: 20, green_facades: 2 })('temperature');
 ok(near(maxed, 32.9, 0.1), 'heat day, all trees + water + facades ≈ 32.9 °C (water at −0.1 °C per feature, Jacobs et al. 2020)', maxed.toFixed(2) + ' °C');
-const water = solve({ ...heat, [MID]: 0, [ALLEY]: 0, [EXT]: 0, blue_infrastructure: 2 })('temperature');
+const water = solve({ ...heat, [MID]: 0, [EXT]: 0, blue_infrastructure: 2 })('temperature');
 ok(near(water, 44.8, 0.01), 'both water features alone cool a 45 °C day by 0.2 °C', water.toFixed(2) + ' °C');
 ok(near(solve({ [EXT]: 1 })('sidewalk_extension_area'), 2700, 0.01) && solve({ [EXT]: 0 })('sidewalk_extension_area') === 0, 'sidewalk extension area 0 / 2,700 m²');
 console.log(failed ? `\n${failed} FAILED` : '\nall passed');

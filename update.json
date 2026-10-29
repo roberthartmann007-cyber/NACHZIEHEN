@@ -136,17 +136,16 @@
       ],
       "influenced_by": [
         "middle_part_covered_trees",
-        "spawn_2_canopy_streets",
         "sidewalk_extension_spawn_2"
       ],
-      "notes": "2026-10-29 (greenery on the 11,500 m² map): Now measured as % canopy cover of the whole map (reference area 11,500 m²), from the planted areas in the new game set-up. Green boulevard on the middle lane: 1,790 m² = 15.57 %. Canopy alley on the sidewalk extension: 2,700 m² = 23.48 %, 1,350 m² = 11.74 % per side (spawn_2_canopy_streets 0–2). Maximum 39.04 % (was 49 %: 13 % middle + 2 × 18 % streets, which on this map would have meant 1,495 m² + 4,140 m², more than the 2,700 m² the extension actually covers). The node formula multiplies the alley by sidewalk_extension_spawn_2 because the trees stand on the extension; the game spawn tree already unlocks spawn_2_canopy_streets only after the sidewalk extension (option id_10 unlocks id_336), so the formula just keeps the editor in step with the game. [FLAG] assumes canopy area = planted area at maturity; crowns that overhang the road would raise it. Unit was \"amount of trees\", but the value has always been used as a percentage. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. East-west street trees now come only from spawn_2_canopy_streets, whose link weight went from 9 to 18 (the old 9 + 9); spawn_3_canopy_street was removed. Every percentage of canopy covering  the streetscape leads to a reduction 0.29°C",
+      "notes": "2026-10-29 (canopy merged into the sidewalk extension): Turning on the sidewalk extension at spawn 2 now plants its whole 2,700 m² with canopy: 23.48 % of the 11,500 m² map, about −6 °C on a 45 °C day. The separate canopy alley slider (spawn_2_canopy_streets, 0–2 sides × 1,350 m²) and its spawn option id_338 (tree_lined_avenue_with_pockets, under the extension) are deleted: with trees always on the extension, the slider only repeated that choice. Two levers set greenery now: green boulevard on the middle lane 1,790 m² = 15.57 %, sidewalk extension 2,700 m² = 23.48 %; maximum 39.04 % (unchanged). Notes below that mention spawn_2_canopy_streets are history. 2026-10-29 (greenery on the 11,500 m² map): Now measured as % canopy cover of the whole map (reference area 11,500 m²), from the planted areas in the new game set-up. Green boulevard on the middle lane: 1,790 m² = 15.57 %. Canopy alley on the sidewalk extension: 2,700 m² = 23.48 %, 1,350 m² = 11.74 % per side (spawn_2_canopy_streets 0–2). Maximum 39.04 % (was 49 %: 13 % middle + 2 × 18 % streets, which on this map would have meant 1,495 m² + 4,140 m², more than the 2,700 m² the extension actually covers). The node formula multiplies the alley by sidewalk_extension_spawn_2 because the trees stand on the extension; the game spawn tree already unlocks spawn_2_canopy_streets only after the sidewalk extension (option id_10 unlocks id_336), so the formula just keeps the editor in step with the game. [FLAG] assumes canopy area = planted area at maturity; crowns that overhang the road would raise it. Unit was \"amount of trees\", but the value has always been used as a percentage. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. East-west street trees now come only from spawn_2_canopy_streets, whose link weight went from 9 to 18 (the old 9 + 9); spawn_3_canopy_street was removed. Every percentage of canopy covering  the streetscape leads to a reduction 0.29°C",
       "priority": "medium",
       "value_kind": "absolute",
       "unit": "% canopy cover",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "100*(1790*middle_part_covered_trees + 1350*spawn_2_canopy_streets*sidewalk_extension_spawn_2)/11500"
+        "expression": "100*(1790*middle_part_covered_trees + 2700*sidewalk_extension_spawn_2)/11500"
       },
       "baseline_value": 0,
       "value": 20,
@@ -2023,7 +2022,7 @@
       "influenced_by": [
         "sidewalk_extension_spawn_2"
       ],
-      "notes": "2026-10-29 (greenery on the 11,500 m² map): Fixed at 2,700 m² from the new game set-up (was 4 × 65 m × 2.0 m = 520 m², capped at 2,000). 2,700 m² cannot come from the 2 m parking strip: over 4 × 65 m it would need 10.4 m width, so the extension covers more than lane 1/8 and the area is now a set value, not derived from extension_segment_length_m. Lingering ceiling in pedestrians_stationary: +0.40 × 2,700 / 5.5 ≈ +196 people (was +38). 2026-10-28 (Tier 4 backing): 4 stretches × L × 2.0 m: 520 m² with L = 65 m (was 2 stretches, 260 m²). The extension runs the full stretch, including the junction clearance zones, which cannot hold parking and are where guidelines place sidewalk extensions (Gehwegvorstreckungen). Width 2.00 m = the EAR 23 parallel stall it replaces. 2026-10-21 (kerb space in the sim): NEW. New sidewalk area from the extension on lane 1/8: both sides × length × 2.0 m (width of the parking strip it replaces, RASt 06). 260 m² with the [FLAG] 65 m estimate.",
+      "notes": "2026-10-29 (canopy merged into the sidewalk extension): The same 2,700 m² is also the canopy area that the extension adds to greenery. 2026-10-29 (greenery on the 11,500 m² map): Fixed at 2,700 m² from the new game set-up (was 4 × 65 m × 2.0 m = 520 m², capped at 2,000). 2,700 m² cannot come from the 2 m parking strip: over 4 × 65 m it would need 10.4 m width, so the extension covers more than lane 1/8 and the area is now a set value, not derived from extension_segment_length_m. Lingering ceiling in pedestrians_stationary: +0.40 × 2,700 / 5.5 ≈ +196 people (was +38). 2026-10-28 (Tier 4 backing): 4 stretches × L × 2.0 m: 520 m² with L = 65 m (was 2 stretches, 260 m²). The extension runs the full stretch, including the junction clearance zones, which cannot hold parking and are where guidelines place sidewalk extensions (Gehwegvorstreckungen). Width 2.00 m = the EAR 23 parallel stall it replaces. 2026-10-21 (kerb space in the sim): NEW. New sidewalk area from the extension on lane 1/8: both sides × length × 2.0 m (width of the parking strip it replaces, RASt 06). 260 m² with the [FLAG] 65 m estimate.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "m²",
@@ -2512,7 +2511,7 @@
         "greenery"
       ],
       "influenced_by": [],
-      "notes": "2026-10-28 (Tier 3 backing): Its activity effect now needs seating (see space_activity_index). 2026-10-21 (kerb space in the sim): Now has effects: parking spaces (−22), lingering capacity (sidewalk_extension_area) and a small activity term (space_activity_index). 2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
+      "notes": "2026-10-29 (canopy merged into the sidewalk extension): Now also the canopy lever: building the extension plants its 2,700 m² with trees (greenery +23.48 %). The canopy alley slider spawn_2_canopy_streets is deleted. The sub-element id_336 under this option keeps only bike_lane_2_mirrored_7. 2026-10-28 (Tier 3 backing): Its activity effect now needs seating (see space_activity_index). 2026-10-21 (kerb space in the sim): Now has effects: parking spaces (−22), lingering capacity (sidewalk_extension_area) and a small activity term (space_activity_index). 2026-10-21 (sidewalk extension on 1/8): NEW. 1 = the outer lane 1/8 holds a sidewalk extension instead of parking, per direction, mirrored. Players can swap parking and extension freely; nothing gates it. With an extension on 1/8, a bike lane has to go on 2/7 (option bike_lane_2_mirrored_7) and takes a car slot there, so car_lanes_spawn_2_fit reads this lever. Public-space effects (activity space, buffer from traffic, parking supply) are not modelled yet.",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -3822,38 +3821,6 @@
       "evidence_status": "",
       "_x": 5450,
       "_y": 2250
-    },
-    {
-      "id": "spawn_2_canopy_streets",
-      "label": "SPAWN_2_canopy_streets",
-      "type": "active",
-      "status": "defined",
-      "influences": [
-        "greenery"
-      ],
-      "influenced_by": [],
-      "notes": "2026-10-29 (greenery on the 11,500 m² map): Canopy alley on the E-W sidewalk extension: 1,350 m² per side, 2,700 m² for both = 23.48 % of the map (was 18 % per side, 36 %). Counts only with sidewalk_extension_spawn_2 = 1. 2026-10-20 (E-W axis decided at one spawn point): players no longer set the lanes at the old spawn point 3 separately; one choice at SP 1 (outer lanes) or SP 2 (middle lanes) sets the east-west cross-section for both spawn 2 (demand at 2*) and spawn 3 (demand at 3*). Demand and spawn points are unchanged. This lever now carries the street trees on both sides of the east-west axis (link weight 18 into greenery).",
-      "priority": "",
-      "value_kind": "absolute",
-      "unit": "",
-      "passive_precision": "decimals",
-      "node_formula": {
-        "enabled": false,
-        "expression": ""
-      },
-      "baseline_value": 2,
-      "value": 0,
-      "min": 0,
-      "max": 2,
-      "active_control": "slider",
-      "active_order": 31,
-      "active_states": {
-        "a": 0,
-        "b": 2
-      },
-      "evidence_status": "",
-      "_x": 3820,
-      "_y": 2430
     },
     {
       "id": "rain",
@@ -6106,24 +6073,6 @@
         "type": "linear_scale",
         "mode": "absolute",
         "slope": 15.57,
-        "intercept": 0,
-        "label": ""
-      },
-      "color": "",
-      "issue_status": "unresolved",
-      "issue_priority": 150
-    },
-    "spawn_2_canopy_streets->greenery": {
-      "value": "",
-      "source": "",
-      "notes": "2026-10-29 (greenery on the 11,500 m² map): Slope 18 → 11.74 per side: 2,700 m² sidewalk extension / 2 sides / 11,500 m² map. Provenance only; the greenery node formula computes the value and needs the sidewalk extension. 2026-10-20 (E-W axis decided at one spawn point): slope 9 -> 18: this link now carries the street trees on both sides of the east-west axis (it was 9 here plus 9 from spawn_3_canopy_street, which was removed).",
-      "status": "empirical",
-      "confidence": "",
-      "weight": 1,
-      "formula": {
-        "type": "linear_scale",
-        "mode": "absolute",
-        "slope": 11.74,
         "intercept": 0,
         "label": ""
       },
@@ -9027,11 +8976,17 @@
     "sidewalk_extension_spawn_2->greenery": {
       "value": "",
       "source": "",
-      "notes": "2026-10-29 (greenery on the 11,500 m² map): Gate: the canopy alley stands on the sidewalk extension, so it only counts when the extension is built. Read by the greenery node formula.",
-      "status": "assumption",
+      "notes": "2026-10-29 (canopy merged into the sidewalk extension): The extension now carries the canopy itself: 0 → 1 adds 2,700 m² = 23.48 % of the map. Provenance only; the greenery node formula computes the value. Replaces the gate role this link had while spawn_2_canopy_streets existed.",
+      "status": "empirical",
       "confidence": "",
       "weight": 1,
-      "formula": null,
+      "formula": {
+        "type": "linear_scale",
+        "mode": "absolute",
+        "slope": 23.48,
+        "intercept": 0,
+        "label": "2,700 m² / 11,500 m² = 23.48 % canopy when the extension is built"
+      },
       "color": "",
       "issue_status": "none",
       "issue_priority": 0
@@ -9389,7 +9344,6 @@
         "y": 0.6244704903563534,
         "parentOptionId": "id_10",
         "options": [
-          "id_338",
           "id_339"
         ],
         "node_id": "",
@@ -9841,13 +9795,6 @@
         "unlockedElemId": null,
         "elemId": "id_326",
         "node_id": "ev_charger"
-      },
-      "id_338": {
-        "id": "id_338",
-        "label": "spawn_2_canopy_streets",
-        "unlockedElemId": null,
-        "elemId": "id_336",
-        "node_id": "spawn_2_canopy_streets"
       },
       "id_339": {
         "id": "id_339",
