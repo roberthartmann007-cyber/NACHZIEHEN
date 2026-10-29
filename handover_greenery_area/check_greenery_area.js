@@ -53,6 +53,6 @@ for (const id of ['plaza_modules_used', 'plaza_upkeep_used', 'plaza_check_limits
   ok(near(fac, 44.85, 0.01), 'the green facade alone cools a 45 °C day by 0.15 °C', fac.toFixed(2) + ' °C'); }
 ok(by.get('green_facades').max === 1, 'green facades: one building (0/1)');
 { const v0 = solve({ ...mild, [MID]: 0, [EXT]: 0, blue_infrastructure: 0, green_facades: 1 })('visual_greenery_index');
-  ok(near(v0, 100 * (1 - Math.exp(-2.3 * 0.15)), 0.01), 'the one facade fills the facade term of the visual greenery index', v0.toFixed(2)); }
+  ok(near(v0, 100 * (1 - Math.exp(-2.3 * 0.1875)), 0.01), 'the one facade fills the facade term of the visual greenery index', v0.toFixed(2)); }
 console.log(failed ? `\n${failed} FAILED` : '\nall passed');
 process.exit(failed ? 1 : 0);

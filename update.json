@@ -481,14 +481,14 @@
         "blue_infrastructure",
         "green_facades"
       ],
-      "notes": "2026-10-29 (grass removed): The grass node is deleted; its 0.20 term is gone from the formula, so the index now tops out at 100*(1-exp(-2.3*0.80)) ≈ 84. Older notes below still name grass. 2026-10-29 (one green facade): Facade term now min(1, green_facades): the one green facade fills it (was /2 for two buildings). 2026-10-29 (greenery on the 11,500 m² map): Canopy term now saturates at greenery/39.04, the new maximum canopy share, so full planting still fills the canopy half of the index (was /49). [2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
+      "notes": "2026-10-29 (grass removed): The grass node is deleted and its 0.20 term is gone. The other weights are scaled by 1/0.80 so they sum to 1 again: greenery 0.625, blue infrastructure 0.1875, green facades 0.1875 (same 3.3 : 1 : 1 ratio, still assumptions). Older notes below still name grass and the old weights. 2026-10-29 (one green facade): Facade term now min(1, green_facades): the one green facade fills it (was /2 for two buildings). 2026-10-29 (greenery on the 11,500 m² map): Canopy term now saturates at greenery/39.04, the new maximum canopy share, so full planting still fills the canopy half of the index (was /49). [2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
       "priority": "",
       "value_kind": "score",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "100*(1 - exp(-2.3*( 0.50*min(1,greenery/39.04) + 0.15*min(1,blue_infrastructure/2) + 0.15*min(1,green_facades) )))"
+        "expression": "100*(1 - exp(-2.3*( 0.625*min(1,greenery/39.04) + 0.1875*min(1,blue_infrastructure/2) + 0.1875*min(1,green_facades) )))"
       },
       "baseline_value": 0,
       "value": 0,
