@@ -241,7 +241,7 @@
         "green_facades",
         "extreme_summer_heat"
       ],
-      "notes": "2026-10-29 (facade cooling sourced): Green facades now cool −0.15 °C per building (was −2). With all trees, both water features and both facades, a 45 °C day goes to 36.6 °C (was 32.9 with the old facade value). Sourced cooling at junction scale comes almost entirely from canopy; water and facades add −0.5 °C together. The figures for the maxed case in the notes below are history. 2026-10-29 (greenery on the 11,500 m² map): Greenery is no longer counted twice. The link greenery → temperature (−0.29 °C per % canopy) went into base, and this formula then subtracted greenery again, so full greenery took a 19 °C day to 2.2 °C and a 45 °C day to 24.4 °C. That link now has slope 0; greenery cools only through this formula: cooling = min(10, max(3, 3 + 0.28·(base − 15))) · (1 − exp(−greenery/25)). At 39 % canopy: 19 → 15.7 °C, 45 → 37.1 °C; with both green facades and both water features, 45 → 32.9 °C. The old design target \"extreme heat 45 → 28 °C when all three are maxed\" rested on an unsourced −6 °C for water; with water set to what field and model studies show (see blue_infrastructure → temperature), the best heat-day result is about 33 °C. Average cooling is 0.20 °C per % on a heat day and 0.08 °C per % on a normal day, below the city-scale 0.29 °C per % (EC 2023), as expected for one junction among heat-storing buildings.",
+      "notes": "2026-10-29 (one green facade): One green facade: −0.15 °C. With all trees, both water features and the facade, a 45 °C day goes to 36.75 °C. 2026-10-29 (facade cooling sourced): Green facades now cool −0.15 °C per building (was −2). With all trees, both water features and both facades, a 45 °C day goes to 36.6 °C (was 32.9 with the old facade value). Sourced cooling at junction scale comes almost entirely from canopy; water and facades add −0.5 °C together. The figures for the maxed case in the notes below are history. 2026-10-29 (greenery on the 11,500 m² map): Greenery is no longer counted twice. The link greenery → temperature (−0.29 °C per % canopy) went into base, and this formula then subtracted greenery again, so full greenery took a 19 °C day to 2.2 °C and a 45 °C day to 24.4 °C. That link now has slope 0; greenery cools only through this formula: cooling = min(10, max(3, 3 + 0.28·(base − 15))) · (1 − exp(−greenery/25)). At 39 % canopy: 19 → 15.7 °C, 45 → 37.1 °C; with both green facades and both water features, 45 → 32.9 °C. The old design target \"extreme heat 45 → 28 °C when all three are maxed\" rested on an unsourced −6 °C for water; with water set to what field and model studies show (see blue_infrastructure → temperature), the best heat-day result is about 33 °C. Average cooling is 0.20 °C per % on a heat day and 0.08 °C per % on a normal day, below the city-scale 0.29 °C per % (EC 2023), as expected for one junction among heat-storing buildings.",
       "priority": "medium",
       "value_kind": "absolute",
       "unit": "°C",
@@ -481,14 +481,14 @@
         "blue_infrastructure",
         "green_facades"
       ],
-      "notes": "2026-10-29 (greenery on the 11,500 m² map): Canopy term now saturates at greenery/39.04, the new maximum canopy share, so full planting still fills the canopy half of the index (was /49). [2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
+      "notes": "2026-10-29 (one green facade): Facade term now min(1, green_facades): the one green facade fills it (was /2 for two buildings). 2026-10-29 (greenery on the 11,500 m² map): Canopy term now saturates at greenery/39.04, the new maximum canopy share, so full planting still fills the canopy half of the index (was /49). [2026-07-05] Aggregate perceived-greenery index (0–100) now also feeds health_index directly — the non-thermal green-space benefit (+5 max), separate from its cooling/public-space effects.\n\n[2026-07-05] Curve redesign: live node_formula uses a saturating greenery envelope with assumed weights: greenery 0.50, grass 0.20, blue infrastructure 0.15, green facades 0.15; saturation rate 2.3 is an assumption.",
       "priority": "",
       "value_kind": "score",
       "unit": "",
       "passive_precision": "decimals",
       "node_formula": {
         "enabled": true,
-        "expression": "100*(1 - exp(-2.3*( 0.50*min(1,greenery/39.04) + 0.20*min(1,grass/4) + 0.15*min(1,blue_infrastructure/2) + 0.15*min(1,green_facades/2) )))"
+        "expression": "100*(1 - exp(-2.3*( 0.50*min(1,greenery/39.04) + 0.20*min(1,grass/4) + 0.15*min(1,blue_infrastructure/2) + 0.15*min(1,green_facades) )))"
       },
       "baseline_value": 0,
       "value": 0,
@@ -769,7 +769,7 @@
         "visual_greenery_index"
       ],
       "influenced_by": [],
-      "notes": "2026-10-29 (facade cooling sourced): Cooling −0.15 °C per building (−0.3 °C for both), from street-level evidence; the old −2 °C per building had no source. Its main effect is visual: see green_facades → visual_greenery_index. [FLAG] the spawn tree has one facade element (spawn 5, max 1): check whether the game can reach 2. 2026-10-29 (facades off the plaza budget): Independent of the plaza: no longer counted in plaza_modules_used, plaza_upkeep_used or plaza_check_limits. Still feeds temperature and visual_greenery_index. two buildings with green facades",
+      "notes": "2026-10-29 (one green facade): One building with a green facade, 0/1 (was 0–2). The game has one facade element (spawn 5, element \"facade\", chosen at most once), so 2 could never be reached; this resolves the facade-count [FLAG] below. Cooling −0.15 °C; it fills the facade term of the visual greenery index. 2026-10-29 (facade cooling sourced): Cooling −0.15 °C per building (−0.3 °C for both), from street-level evidence; the old −2 °C per building had no source. Its main effect is visual: see green_facades → visual_greenery_index. [FLAG] the spawn tree has one facade element (spawn 5, max 1): check whether the game can reach 2. 2026-10-29 (facades off the plaza budget): Independent of the plaza: no longer counted in plaza_modules_used, plaza_upkeep_used or plaza_check_limits. Still feeds temperature and visual_greenery_index. two buildings with green facades",
       "priority": "",
       "value_kind": "absolute",
       "unit": "",
@@ -778,15 +778,15 @@
         "enabled": false,
         "expression": ""
       },
-      "baseline_value": 2,
+      "baseline_value": 1,
       "value": 0,
       "min": 0,
-      "max": 2,
+      "max": 1,
       "active_control": "slider",
       "active_order": 6,
       "active_states": {
         "a": 0,
-        "b": 2
+        "b": 1
       },
       "evidence_status": "",
       "_x": 4340,
@@ -5035,7 +5035,7 @@
     "green_facades->visual_greenery_index": {
       "value": "",
       "source": "Kaplan & Kaplan 1989; Ulrich et al. 1991; Kardan et al. 2015; Konijnendijk 2021 (3-30-300). Facade greenery specifically: NTU Singapore VR study 2021 (stress rose with green-painted walls, not with planted facades), https://ntu.edu.sg/news/detail/vr-study-finds-vertical-greenery-useful-as-a-stress-buffer; Sheffield image trial 2024, n = 401, facade greenery raised perceived happiness more than ground-level greenery, https://eprints.whiterose.ac.uk/id/eprint/233462",
-      "notes": "2026-10-29 (facade cooling sourced): The 15 % weight stays an assumption, but the direction is supported for facades specifically by the two studies added to the source. NORMALIZED: max_available_units=2 | max_node_impact=15 pts | slope = max_node_impact / max_available_units = 15 / 2 = 7.500. To change the spawn ceiling (e.g. add a third building), update max_available_units and recalculate slope accordingly. VGI budget share: 15 of 100 pts. Each facade-covered building is visually striking in VR — high per-unit impact justified by the dominance of vertical surfaces in the field of view.\n\n[2026-07-05] Curve redesign: live visual_greenery_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.3*(0.50*min(1,greenery/500)+0.20*min(1,grass/30)+0.15*min(1,blue_infrastructure/20)+0.15*min(1,green_facades/2)))). Weights and saturation rate are assumptions; sources support restorative/visibility rationale, not exact coefficients.",
+      "notes": "2026-10-29 (one green facade): One facade now fills the 15 % facade share (live formula min(1, green_facades)). The max_available_units=2 normalization below is out of date. 2026-10-29 (facade cooling sourced): The 15 % weight stays an assumption, but the direction is supported for facades specifically by the two studies added to the source. NORMALIZED: max_available_units=2 | max_node_impact=15 pts | slope = max_node_impact / max_available_units = 15 / 2 = 7.500. To change the spawn ceiling (e.g. add a third building), update max_available_units and recalculate slope accordingly. VGI budget share: 15 of 100 pts. Each facade-covered building is visually striking in VR — high per-unit impact justified by the dominance of vertical surfaces in the field of view.\n\n[2026-07-05] Curve redesign: live visual_greenery_index node_formula supersedes old additive edge math with: 100*(1-exp(-2.3*(0.50*min(1,greenery/500)+0.20*min(1,grass/30)+0.15*min(1,blue_infrastructure/20)+0.15*min(1,green_facades/2)))). Weights and saturation rate are assumptions; sources support restorative/visibility rationale, not exact coefficients.",
       "status": "assumption",
       "confidence": "medium",
       "weight": 1,
@@ -5429,7 +5429,7 @@
     "green_facades->temperature": {
       "value": "",
       "source": "Street-canyon CFD with facade greening: mean −0.1 K, max −0.3 K, < 0.05 K mid-canyon (engrXiv preprint 2599, https://engrxiv.org/preprint/view/2599); São Paulo ENVI-met: difference at 15 cm from the wall, insignificant from 60 cm (Pós FAUUSP, https://journals.usp.br/posfau/article/view/195441); Cui et al. 2022, PET −0.17 to −1.4 °C near greened facades, Hong Kong (https://ira.lib.polyu.edu.hk/handle/10397/99532); Alexandri & Jones 2008, Building and Environment 43(4):480–493 (https://orca.cardiff.ac.uk/id/eprint/29416/)",
-      "notes": "2026-10-29 (facade cooling sourced): Slope −2 → −0.15 °C per building: both facades give −0.3 °C. The old −4 °C maximum had no source. Evidence: in a street canyon, greened facades lower air temperature by about 0.1 K on average and 0.3 K at most, under 0.05 K in the middle of the street; field studies find 0.6–1.0 °C only within about a metre of the wall, and a simulation finds no clear difference from 60 cm. The large values in Alexandri & Jones 2008 (up to 8–13 °C) come from a 2D model with green walls and green roofs on whole canyons, mostly in hot climates, which does not fit two buildings at a Berlin junction. About 30–50 % of all facades would be needed for about 1 °C. The stronger effect is local felt comfort next to the wall (PET −0.17 to −1.4 °C, Cui et al. 2022, mainly from greening low on the facade); it is not junction-wide air temperature. Old note: NORMALIZED: max_available_units=2 | max_node_impact=−4°C | slope = max_node_impact / max_available_units = −4 / 2 = −2.000. To change the spawn ceiling (e.g. add a third building), update max_available_units and recalculate slope accordingly. Rationale: 2 buildings with full green facade coverage. Each facade provides insulation + evaporative cooling, −2°C per building.",
+      "notes": "2026-10-29 (one green facade): With one facade the maximum is −0.15 °C (was −0.3 °C for two). Per-building slope unchanged. 2026-10-29 (facade cooling sourced): Slope −2 → −0.15 °C per building: both facades give −0.3 °C. The old −4 °C maximum had no source. Evidence: in a street canyon, greened facades lower air temperature by about 0.1 K on average and 0.3 K at most, under 0.05 K in the middle of the street; field studies find 0.6–1.0 °C only within about a metre of the wall, and a simulation finds no clear difference from 60 cm. The large values in Alexandri & Jones 2008 (up to 8–13 °C) come from a 2D model with green walls and green roofs on whole canyons, mostly in hot climates, which does not fit two buildings at a Berlin junction. About 30–50 % of all facades would be needed for about 1 °C. The stronger effect is local felt comfort next to the wall (PET −0.17 to −1.4 °C, Cui et al. 2022, mainly from greening low on the facade); it is not junction-wide air temperature. Old note: NORMALIZED: max_available_units=2 | max_node_impact=−4°C | slope = max_node_impact / max_available_units = −4 / 2 = −2.000. To change the spawn ceiling (e.g. add a third building), update max_available_units and recalculate slope accordingly. Rationale: 2 buildings with full green facade coverage. Each facade provides insulation + evaporative cooling, −2°C per building.",
       "status": "empirical",
       "confidence": "medium",
       "weight": 1,
@@ -5438,7 +5438,7 @@
         "mode": "absolute",
         "slope": -0.15,
         "intercept": 0,
-        "label": "−0.15 °C per greened building, −0.3 °C for both (street-canyon CFD maximum)"
+        "label": "−0.15 °C for the one greened building"
       },
       "color": "",
       "issue_status": "none",

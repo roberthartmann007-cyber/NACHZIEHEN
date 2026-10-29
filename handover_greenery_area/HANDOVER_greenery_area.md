@@ -41,7 +41,10 @@ Two levers set greenery:
   - `2*green_facades` from `plaza_upkeep_used`
   - `(green_facades > 2)` from `plaza_check_limits`
   - Their three links are removed too. Facades now feed only `temperature` and `visual_greenery_index`.
-- **`green_facades → temperature`**: slope −2 → **−0.15 °C per building**, so both give −0.3 °C. Status is now "empirical", confidence medium, with sources in the link.
+- **`green_facades → temperature`**: slope −2 → **−0.15 °C per building**. Status is now "empirical", confidence medium, with sources in the link.
+- **One green facade:** `green_facades` is now 0/1 (was 0–2). The game has one facade element (spawn 5, chosen at most once), so 2 was never reachable.
+  - Cooling: −0.15 °C.
+  - The visual greenery index reads `min(1, green_facades)` (was `/2`), so the one facade fills its 15 % share.
 - **`green_facades → visual_greenery_index`**: the weight stays as it is. Two facade-specific wellbeing studies are added as sources.
 
 ## Water cooling: sources
@@ -70,7 +73,7 @@ The old −2 °C per building (−4 °C for both) had no source.
 | Felt comfort near the wall, Hong Kong | PET −0.17 to −1.4 °C, mainly from greening low on the facade | Cui et al. 2022, [PolyU](https://ira.lib.polyu.edu.hk/handle/10397/99532) |
 | Whole canyons with green walls and roofs, 2D model, mostly hot climates | up to 8–13 °C | Alexandri & Jones 2008, *Building and Environment* 43(4), [Cardiff](https://orca.cardiff.ac.uk/id/eprint/29416/) |
 
-- **Why −0.15 °C per building:** two buildings at one junction match the street-canyon maximum of −0.3 K.
+- **Why −0.15 °C per building:** this is half the street-canyon maximum of −0.3 K, which was measured with greened facades along the canyon. One building at the junction stays below that.
 - **Alexandri & Jones:** their scenario (every canyon greened, roofs included) doesn't fit this map.
 - **Comfort next to the wall:** this is local, felt comfort, like `plaza_trees`. It is not modelled as junction-wide cooling.
 - **Visual and wellbeing effects** are supported for facades specifically:
@@ -85,10 +88,10 @@ The old −2 °C per building (−4 °C for both) had no source.
 | Sidewalk extension only | 16.49 | 38.91 |
 | All trees | 15.74 (was 2.2) | 37.10 (was 24.4) |
 | Both water features only | — | 44.80 |
-| Both green facades only | — | 44.70 |
-| All trees + both water features + both facades | — | 36.60 |
+| The green facade only | — | 44.85 |
+| All trees + both water features + the facade | — | 36.75 |
 
-The old design target, "45 → 28 °C when trees, water and facades are maxed", depended on the unsourced −6 °C for water. It also depended on the unsourced −4 °C for facades. With sourced values, the best heat-day result is about 36.6 °C. Nearly all junction-scale cooling comes from canopy; water and facades add −0.5 °C together.
+The old design target, "45 → 28 °C when trees, water and facades are maxed", depended on the unsourced −6 °C for water. It also depended on the unsourced −4 °C for facades. With sourced values, the best heat-day result is about 36.75 °C. Nearly all junction-scale cooling comes from canopy; water and the facade add −0.35 °C together.
 
 ## Side effects
 
@@ -100,7 +103,6 @@ The old design target, "45 → 28 °C when trees, water and facades are maxed", 
 ## Open [FLAG]s
 
 - **Canopy vs planted area:** canopy area is assumed equal to the planted area at maturity. Crowns overhanging the road would raise it.
-- **Facade count:** the spawn tree has one facade element (spawn 5, chosen at most once). Check whether the game can reach `green_facades` = 2.
 - **Water type:** if the game's water feature is a mist or spray system, the junction-wide −0.1 °C stays, but a separate local "felt" effect would be justified.
 
 ## Files
@@ -109,5 +111,6 @@ The old design target, "45 → 28 °C when trees, water and facades are maxed", 
 - `apply_merge_canopy.py`: step 2, which merges the canopy into the sidewalk extension and deletes the alley slider. It runs once, after step 1, and has been applied.
 - `apply_facades_off_plaza.py`: step 3, which takes green facades off the plaza budget. It runs once, after step 2, and has been applied.
 - `apply_facade_cooling.py`: step 4, which sets facade cooling to −0.15 °C per building and adds the sources. It runs once, after step 3, and has been applied.
-- Run in order on `.tmp/update.before_greenery_2026-10-29.json`, steps 1–4 reproduce `update.json` exactly.
+- `apply_one_facade.py`: step 5, which sets one green facade (0/1) and has it fill the facade term of the visual greenery index. It runs once, after step 4, and has been applied.
+- Run in order on `.tmp/update.before_greenery_2026-10-29.json`, steps 1–5 reproduce `update.json` exactly.
 - `check_greenery_area.js`: `node handover_greenery_area/check_greenery_area.js`

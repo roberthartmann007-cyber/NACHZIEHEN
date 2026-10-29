@@ -40,16 +40,19 @@ for (const [label, lv, g] of cases) {
 const all = { [MID]: 1, [EXT]: 1 };
 ok(near(solve({ ...mild, ...all })('temperature'), 15.74, 0.1), '19 °C day with all trees ≈ 15.7 °C (was 2.2)');
 ok(near(solve({ ...heat, ...all })('temperature'), 37.10, 0.1), '45 °C day with all trees ≈ 37.1 °C (was 24.4)');
-const maxed = solve({ ...heat, ...all, blue_infrastructure: 20, green_facades: 2 })('temperature');
-ok(near(maxed, 36.6, 0.1), 'heat day, all trees + water + facades ≈ 36.6 °C (water −0.1, facades −0.15 °C per unit)', maxed.toFixed(2) + ' °C');
+const maxed = solve({ ...heat, ...all, blue_infrastructure: 2, green_facades: 1 })('temperature');
+ok(near(maxed, 36.75, 0.01), 'heat day, all trees + both water features + the facade ≈ 36.75 °C', maxed.toFixed(2) + ' °C');
 const water = solve({ ...heat, [MID]: 0, [EXT]: 0, blue_infrastructure: 2 })('temperature');
 ok(near(water, 44.8, 0.01), 'both water features alone cool a 45 °C day by 0.2 °C', water.toFixed(2) + ' °C');
 ok(near(solve({ [EXT]: 1 })('sidewalk_extension_area'), 2700, 0.01) && solve({ [EXT]: 0 })('sidewalk_extension_area') === 0, 'sidewalk extension area 0 / 2,700 m²');
 for (const id of ['plaza_modules_used', 'plaza_upkeep_used', 'plaza_check_limits'])
   ok(CES.validateExpression(by.get(id).node_formula.expression, false, ctx).ok && !by.get(id).influenced_by.includes('green_facades'), `${id} compiles and no longer reads green facades`);
-{ const a = solve({ green_facades: 0 }), b = solve({ green_facades: 2 });
-  ok(['plaza_modules_used', 'plaza_upkeep_used', 'plaza_check_limits'].every(k => a(k) === b(k)), 'two green facades leave the plaza budget unchanged'); }
-{ const fac = solve({ ...heat, [MID]: 0, [EXT]: 0, blue_infrastructure: 0, green_facades: 2 })('temperature');
-  ok(near(fac, 44.7, 0.01), 'both green facades alone cool a 45 °C day by 0.3 °C', fac.toFixed(2) + ' °C'); }
+{ const a = solve({ green_facades: 0 }), b = solve({ green_facades: 1 });
+  ok(['plaza_modules_used', 'plaza_upkeep_used', 'plaza_check_limits'].every(k => a(k) === b(k)), 'the green facade leaves the plaza budget unchanged'); }
+{ const fac = solve({ ...heat, [MID]: 0, [EXT]: 0, blue_infrastructure: 0, green_facades: 1 })('temperature');
+  ok(near(fac, 44.85, 0.01), 'the green facade alone cools a 45 °C day by 0.15 °C', fac.toFixed(2) + ' °C'); }
+ok(by.get('green_facades').max === 1, 'green facades: one building (0/1)');
+{ const v0 = solve({ ...mild, [MID]: 0, [EXT]: 0, grass: 0, blue_infrastructure: 0, green_facades: 1 })('visual_greenery_index');
+  ok(near(v0, 100 * (1 - Math.exp(-2.3 * 0.15)), 0.01), 'the one facade fills the facade term of the visual greenery index', v0.toFixed(2)); }
 console.log(failed ? `\n${failed} FAILED` : '\nall passed');
 process.exit(failed ? 1 : 0);
